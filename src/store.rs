@@ -148,7 +148,7 @@ impl Timelog {
     pub fn get_day(&self, day: &NaiveDate) -> impl Iterator<Item = &Entry> {
         let begin = day.and_hms(0, 0, 0);
         let end = day.and_hms(23, 59, 59);
-        self.entries.iter().filter(move |e| e.stop >= begin && e.stop < end)
+        self.entries.iter().filter(move |e| e.stop >= begin && e.stop <= end)
     }
 
     pub fn get_today(&self) -> impl Iterator<Item = &Entry> {
