@@ -140,6 +140,7 @@ impl Timelog {
             .expect(&format!("Failed to write {:?}", filename));
     }
 
+    #[cfg(test)]
     pub fn get_all(&self) -> impl Iterator<Item = &Entry> {
         return self.entries.iter()
     }
