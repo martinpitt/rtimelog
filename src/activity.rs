@@ -80,20 +80,6 @@ mod tests {
     use chrono::{NaiveDate};
     use crate::store::Timelog;
 
-    const DAY_LOG: &'static str = "
-2022-06-10 07:00: arrived
-2022-06-10 08:45: gtimelog: code
-2022-06-10 09:00: ** tea
-2022-06-10 12:05: gtimelog: code
-2022-06-10 12:35: customer joe: inquiry
-2022-06-10 13:15: ** lunch
-2022-06-10 14:00: code
-2022-06-10 15:00: bug triage
-2022-06-10 15:10: ** tea
-2022-06-10 16:00: customer joe: support
-";
-
-
     #[test]
     fn test_activity_display() {
         assert_eq!(&format!("{}", Activity { name: "code this".to_string(), duration: Duration::minutes(3) }),
@@ -107,13 +93,28 @@ mod tests {
     }
 
     #[test]
-    fn test_activities_construct() {
+    fn test_activities_empty() {
         let a = Activities::new_from_entries(vec![].iter());
         assert_eq!(a.activities.len(), 0);
         assert_eq!(a.total_work, Duration::minutes(0));
         assert_eq!(a.total_slack, Duration::minutes(0));
+    }
 
-        let tl = Timelog::new_from_string(DAY_LOG);
+    #[test]
+    fn test_activities_daily() {
+        let tl = Timelog::new_from_string("
+2022-06-10 07:00: arrived
+2022-06-10 08:45: gtimelog: code
+2022-06-10 09:00: ** tea
+2022-06-10 12:05: gtimelog: code
+2022-06-10 12:35: customer joe: inquiry
+2022-06-10 13:15: ** lunch
+2022-06-10 14:00: code
+2022-06-10 15:00: bug triage
+2022-06-10 15:10: ** tea
+2022-06-10 16:00: customer joe: support
+");
+
         let a = Activities::new_from_entries(tl.get_day(&NaiveDate::from_ymd(2022, 6, 10)));
         assert_eq!(a.total_work, Duration::minutes(475));
         assert_eq!(a.total_slack, Duration::minutes(65));
