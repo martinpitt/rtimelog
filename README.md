@@ -55,6 +55,13 @@ Whenever you add an entry, it will be immediately saved to
 ~/.gtimelog/timelog.txt. It's possible to manually edit the file, just be
 cautious to not break the format.
 
+Installation
+------------
+The [releases page](https://github.com/martinpitt/rtimelog/releases) has
+automatically built binaries for Linux, Windows, and MacOS. Download the
+archive for your operating system, unpack it, and run `rtimelog`. You can copy
+that to `/usr/local/bin/` or `~/.bin/` of course.
+
 Building
 --------
 
