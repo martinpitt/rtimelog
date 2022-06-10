@@ -68,3 +68,5 @@ you can run it with
 Run the unit tests with
 
     cargo build
+
+![tests](https://github.com/martinpitt/rtimelog/actions/workflows/tests.yml/badge.svg)

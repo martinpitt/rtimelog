@@ -1,0 +1,28 @@
+name: tests
+on:
+  push:
+  pull_request:
+  schedule:
+  - cron: 0 6 * * MON,FRI
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build debug mode
+        run: cargo build
+
+      - name: Run tests in debug mode
+        run: cargo test
+
+      - name: Build release mode
+        run: cargo build --release
+
+      - name: Run tests in release mode
+        run: cargo test --release
