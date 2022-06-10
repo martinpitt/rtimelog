@@ -126,6 +126,10 @@ impl Timelog {
     pub fn get_today(&self) -> impl Iterator<Item = &Entry> {
         self.get_day(&Local::today().naive_local())
     }
+
+    pub fn add(&mut self, task: String) {
+        self.entries.push(Entry { task, stop: Local::now().naive_local() });
+    }
 }
 
 
@@ -228,5 +232,13 @@ mod tests {
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-10 07:00: arrived");
         assert_eq!(&format!("{}", entries[5]), "2022-06-10 16:00: customer joe: support");
+    }
+
+    #[test]
+    fn test_add() {
+        let mut tl = Timelog::new_from_string("");
+        tl.add("think hard".to_string());
+        assert_eq!(tl.entries.len(), 1);
+        assert_eq!(tl.entries[0].task, "think hard");
     }
 }
