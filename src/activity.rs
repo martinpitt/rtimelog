@@ -1,7 +1,7 @@
 extern crate chrono;
 
 use std::fmt;
-use chrono::{Duration, NaiveDateTime};
+use chrono::{prelude::*, Duration, NaiveDateTime};
 
 use crate::store::{Entry};
 
@@ -39,6 +39,11 @@ impl Activities {
         for entry in entries {
             // first entry's task is ignored, it just provides the start time
             if prev_stop.is_none() {
+                prev_stop = Some(entry.stop);
+                continue;
+            }
+            // likewise, first entry of every day gets ignored
+            if prev_stop.unwrap().day() != entry.stop.day() {
                 prev_stop = Some(entry.stop);
                 continue;
             }
@@ -134,5 +139,46 @@ mod tests {
 -------
 Total work done: 7 h 55 min
 Total slacking: 1 h 5 min\n")
+    }
+
+    #[test]
+    fn test_activities_weekly() {
+        let tl = Timelog::new_from_string("
+2022-06-01 06:00: arrived
+2022-06-01 07:00: workw1
+2022-06-01 07:10: ** tea
+
+2022-06-03 06:00: arrived
+2022-06-03 07:00: workw1
+2022-06-03 07:10: ** tea
+
+2022-06-08 06:00: arrived
+2022-06-08 07:00: workw2
+2022-06-08 07:10: ** tea
+
+2022-06-09 06:00: arrived
+2022-06-09 07:00: workw2
+
+2022-06-10 06:00: arrived
+2022-06-10 07:00: workw2
+2022-06-10 07:10: ** tea
+");
+
+        let a = Activities::new_from_entries(tl.get_week(&NaiveDate::from_ymd(2022, 6, 7)));
+        assert_eq!(a.total_work, Duration::hours(3));
+        assert_eq!(a.total_slack, Duration::minutes(20));
+        assert_eq!(a.activities.len(), 2);
+        assert_eq!(a.activities[0].name, "workw2");
+        assert_eq!(a.activities[0].duration, Duration::hours(3));
+        assert_eq!(a.activities[1].name, "** tea");
+        assert_eq!(a.activities[1].duration, Duration::minutes(20));
+
+        assert_eq!(format!("{}", a),
+" 3 h  0 min: workw2
+ 0 h 20 min: ** tea
+-------
+Total work done: 3 h 0 min
+Total slacking: 0 h 20 min
+");
     }
 }

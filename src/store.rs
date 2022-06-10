@@ -6,7 +6,7 @@ use std::fs::{File};
 use std::io::{self, prelude::*};
 use std::path::{PathBuf};
 
-use chrono::{Local, NaiveDate, NaiveDateTime};
+use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
 
 /**
  * Single timelog entry
@@ -155,6 +155,17 @@ impl Timelog {
         self.get_day(&Local::today().naive_local())
     }
 
+    pub fn get_week(&self, day: &NaiveDate) -> impl Iterator<Item = &Entry> {
+        let week = day.iso_week().week();
+        let begin = NaiveDate::from_isoywd(day.year(), week, Weekday::Mon).and_hms(0, 0, 0);
+        let end = NaiveDate::from_isoywd(day.year(), week + 1, Weekday::Mon).and_hms(0, 0, 0);
+        self.entries.iter().filter(move |e| e.stop >= begin && e.stop < end)
+    }
+
+    pub fn get_this_week(&self) -> impl Iterator<Item = &Entry> {
+        self.get_week(&Local::today().naive_local())
+    }
+
     pub fn add(&mut self, task: String) {
         self.entries.push(Entry { task, stop: Local::now().naive_local() });
     }
@@ -178,6 +189,26 @@ mod tests {
 2022-06-10 14:00: rtimelog: code
 2022-06-10 15:00: bug triage
 2022-06-10 16:00: customer joe: support
+";
+
+    const TWO_WEEKS: &'static str = "
+2022-06-01 06:00: arrived
+2022-06-01 07:00: workw1
+2022-06-01 07:10: ** tea
+
+2022-06-03 06:00: arrived
+2022-06-03 07:00: workw1
+2022-06-03 07:10: ** tea
+
+2022-06-08 06:00: arrived
+2022-06-08 07:00: workw2
+2022-06-08 07:10: ** tea
+
+2022-06-09 06:00: arrived
+2022-06-09 07:00: workw2
+
+2022-06-10 06:00: arrived
+2022-06-10 07:00: workw2
 ";
 
     #[test]
@@ -260,6 +291,25 @@ mod tests {
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-10 07:00: arrived");
         assert_eq!(&format!("{}", entries[5]), "2022-06-10 16:00: customer joe: support");
+    }
+
+    #[test]
+    fn test_get_week() {
+        let tl = Timelog::new_from_string("");
+        assert_eq!(tl.get_week(&NaiveDate::from_ymd(2022, 6, 2)).next(), None);
+
+        let tl = Timelog::new_from_string(TWO_WEEKS);
+        // select Wed, data has Tue and Thu
+        let entries = tl.get_week(&NaiveDate::from_ymd(2022, 6, 2)).collect::<Vec<&Entry>>();
+        assert_eq!(entries.len(), 6);
+        assert_eq!(&format!("{}", entries[0]), "2022-06-01 06:00: arrived");
+        assert_eq!(&format!("{}", entries[5]), "2022-06-03 07:10: ** tea");
+
+        // select Tue, data has Wed to Fri
+        let entries = tl.get_week(&NaiveDate::from_ymd(2022, 6, 7)).collect::<Vec<&Entry>>();
+        assert_eq!(entries.len(), 7);
+        assert_eq!(&format!("{}", entries[0]), "2022-06-08 06:00: arrived");
+        assert_eq!(&format!("{}", entries[6]), "2022-06-10 07:00: workw2");
     }
 
     #[test]
