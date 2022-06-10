@@ -6,7 +6,7 @@ use std::fs::{File};
 use std::io::{self, prelude::*};
 use std::path::{PathBuf};
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{Local, NaiveDate, NaiveDateTime};
 
 /**
  * Single timelog entry
@@ -17,8 +17,8 @@ const TIME_FMT: &'static str = "%Y-%m-%d %H:%M";
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct Entry {
-    stop: NaiveDateTime,
-    task: String,
+    pub stop: NaiveDateTime,
+    pub task: String,
 }
 
 impl fmt::Display for Entry {
@@ -121,6 +121,10 @@ impl Timelog {
         let begin = day.and_hms(0, 0, 0);
         let end = day.and_hms(23, 59, 59);
         self.entries.iter().filter(move |e| e.stop >= begin && e.stop < end)
+    }
+
+    pub fn get_today(&self) -> impl Iterator<Item = &Entry> {
+        self.get_day(&Local::today().naive_local())
     }
 }
 
