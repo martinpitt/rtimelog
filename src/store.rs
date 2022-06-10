@@ -33,6 +33,7 @@ impl fmt::Display for Entry {
 
 pub struct Timelog {
     entries: Vec<Entry>,
+    filename: Option<PathBuf>,
 }
 
 impl Timelog {
@@ -41,11 +42,12 @@ impl Timelog {
     }
 
     pub fn new_from_file(path: &PathBuf) -> Timelog {
-        Timelog::new_from_string(&Timelog::read(path))
+        Timelog { entries: Timelog::parse(&Timelog::read(path)), filename: Some(path.clone()) }
     }
 
+    #[cfg(test)]
     pub fn new_from_string(contents: &str) -> Timelog {
-        Timelog { entries: Timelog::parse(contents) }
+        Timelog { entries: Timelog::parse(contents), filename: None }
     }
 
     pub fn get_default_file() -> PathBuf {
@@ -111,6 +113,31 @@ impl Timelog {
             eprintln!("WARNING: ignoring invalid line in timelog: {}", line);
             None
         }
+    }
+
+    fn format_store(&self) -> String {
+        let mut output = String::new();
+        let mut prev: Option<NaiveDate> = None;
+
+        for entry in &self.entries {
+            // leave an empty line between days
+            if prev.is_some() && prev.unwrap() != entry.stop.date() {
+                output.push_str("\n");
+            }
+            prev = Some(entry.stop.date());
+            output.push_str(&format!("{}\n", entry));
+        }
+
+        output
+    }
+
+    pub fn save(&self) {
+        assert!(self.filename.is_some());
+        let filename = self.filename.as_ref().unwrap();
+        let mut f = File::create(filename)
+            .expect(&format!("Failed to open {:?} for writing", filename));
+        write!(f, "{}", self.format_store())
+            .expect(&format!("Failed to write {:?}", filename));
     }
 
     pub fn get_all(&self) -> impl Iterator<Item = &Entry> {
@@ -232,6 +259,13 @@ mod tests {
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-10 07:00: arrived");
         assert_eq!(&format!("{}", entries[5]), "2022-06-10 16:00: customer joe: support");
+    }
+
+    #[test]
+    fn test_format_store() {
+        let tl = Timelog::new_from_string(TWO_DAYS);
+        // simple roundtrip; but our constant starts with an empty line
+        assert_eq!(tl.format_store(), TWO_DAYS.trim_start());
     }
 
     #[test]
