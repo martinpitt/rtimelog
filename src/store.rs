@@ -2,7 +2,7 @@ extern crate chrono;
 extern crate dirs;
 
 use std::fmt;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{self, prelude::*};
 use std::path::PathBuf;
 
@@ -143,6 +143,9 @@ impl Timelog {
     pub fn save(&self) -> Result<(), io::Error> {
         assert!(self.filename.is_some());
         let filename = self.filename.as_ref().unwrap();
+        if let Some(parent) = filename.parent() {
+            fs::create_dir_all(parent)?;
+        }
         let mut f = File::create(filename)?;
         write!(f, "{}", self.format_store())?;
         Ok(())
