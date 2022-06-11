@@ -1,9 +1,10 @@
 extern crate chrono;
 
 use std::fmt;
+
 use chrono::{prelude::*, Duration, NaiveDateTime};
 
-use crate::store::{Entry};
+use crate::store::Entry;
 
 /**
  * Activity: Duration of all Entry's with the same task
@@ -15,7 +16,13 @@ pub struct Activity {
 
 impl fmt::Display for Activity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:>2} h {:>2} min: {}", self.duration.num_hours(), self.duration.num_minutes() % 60, self.name)
+        write!(
+            f,
+            "{:>2} h {:>2} min: {}",
+            self.duration.num_hours(),
+            self.duration.num_minutes() % 60,
+            self.name
+        )
     }
 }
 
@@ -55,15 +62,25 @@ impl Activities {
             }
 
             // meh quadratic loop, but not important
-            match activities.iter_mut().find(|a: &&mut Activity| a.name == entry.task) {
-                Some(a) => { a.duration = a.duration + duration },
-                None => activities.push(Activity { name: entry.task.to_string(), duration }),
+            match activities
+                .iter_mut()
+                .find(|a: &&mut Activity| a.name == entry.task)
+            {
+                Some(a) => a.duration = a.duration + duration,
+                None => activities.push(Activity {
+                    name: entry.task.to_string(),
+                    duration,
+                }),
             }
 
             prev_stop = Some(entry.stop);
         }
 
-        Activities { activities, total_work, total_slack }
+        Activities {
+            activities,
+            total_work,
+            total_slack,
+        }
     }
 }
 
@@ -73,28 +90,69 @@ impl fmt::Display for Activities {
             writeln!(f, "{}", a)?;
         }
         writeln!(f, "-------")?;
-        writeln!(f, "Total work done: {} h {} min", self.total_work.num_hours(), self.total_work.num_minutes() % 60)?;
-        writeln!(f, "Total slacking: {} h {} min", self.total_slack.num_hours(), self.total_slack.num_minutes() % 60)
+        writeln!(
+            f,
+            "Total work done: {} h {} min",
+            self.total_work.num_hours(),
+            self.total_work.num_minutes() % 60
+        )?;
+        writeln!(
+            f,
+            "Total slacking: {} h {} min",
+            self.total_slack.num_hours(),
+            self.total_slack.num_minutes() % 60
+        )
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{NaiveDate};
     use crate::store::Timelog;
+    use chrono::NaiveDate;
 
     #[test]
     fn test_activity_display() {
-        assert_eq!(&format!("{}", Activity { name: "code this".to_string(), duration: Duration::minutes(3) }),
-                   " 0 h  3 min: code this");
-        assert_eq!(&format!("{}", Activity { name: "code this".to_string(), duration: Duration::minutes(59) }),
-                   " 0 h 59 min: code this");
-        assert_eq!(&format!("{}", Activity { name: "code this".to_string(), duration: Duration::minutes(60) }),
-                   " 1 h  0 min: code this");
-        assert_eq!(&format!("{}", Activity { name: "code this".to_string(), duration: Duration::minutes(23 * 60 + 1) }),
-                   "23 h  1 min: code this");
+        assert_eq!(
+            &format!(
+                "{}",
+                Activity {
+                    name: "code this".to_string(),
+                    duration: Duration::minutes(3)
+                }
+            ),
+            " 0 h  3 min: code this"
+        );
+        assert_eq!(
+            &format!(
+                "{}",
+                Activity {
+                    name: "code this".to_string(),
+                    duration: Duration::minutes(59)
+                }
+            ),
+            " 0 h 59 min: code this"
+        );
+        assert_eq!(
+            &format!(
+                "{}",
+                Activity {
+                    name: "code this".to_string(),
+                    duration: Duration::minutes(60)
+                }
+            ),
+            " 1 h  0 min: code this"
+        );
+        assert_eq!(
+            &format!(
+                "{}",
+                Activity {
+                    name: "code this".to_string(),
+                    duration: Duration::minutes(23 * 60 + 1)
+                }
+            ),
+            "23 h  1 min: code this"
+        );
     }
 
     #[test]
@@ -107,7 +165,8 @@ mod tests {
 
     #[test]
     fn test_activities_daily() {
-        let tl = Timelog::new_from_string("
+        let tl = Timelog::new_from_string(
+            "
 2022-06-10 07:00: arrived
 2022-06-10 08:45: gtimelog: code
 2022-06-10 09:00: ** tea
@@ -118,7 +177,8 @@ mod tests {
 2022-06-10 15:00: bug triage
 2022-06-10 15:10: ** tea
 2022-06-10 16:00: customer joe: support
-");
+",
+        );
 
         let a = Activities::new_from_entries(tl.get_day(&NaiveDate::from_ymd(2022, 6, 10)));
         assert_eq!(a.total_work, Duration::minutes(475));
@@ -126,10 +186,14 @@ mod tests {
         assert_eq!(a.activities.len(), 7);
         assert_eq!(a.activities[0].name, "gtimelog: code");
         // first block 1:45, second block 3:05
-        assert_eq!(a.activities[0].duration, Duration::hours(4) + Duration::minutes(50));
+        assert_eq!(
+            a.activities[0].duration,
+            Duration::hours(4) + Duration::minutes(50)
+        );
 
-        assert_eq!(format!("{}", a),
-" 4 h 50 min: gtimelog: code
+        assert_eq!(
+            format!("{}", a),
+            " 4 h 50 min: gtimelog: code
  0 h 25 min: ** tea
  0 h 30 min: customer joe: inquiry
  0 h 40 min: ** lunch
@@ -138,12 +202,14 @@ mod tests {
  0 h 50 min: customer joe: support
 -------
 Total work done: 7 h 55 min
-Total slacking: 1 h 5 min\n")
+Total slacking: 1 h 5 min\n"
+        )
     }
 
     #[test]
     fn test_activities_weekly() {
-        let tl = Timelog::new_from_string("
+        let tl = Timelog::new_from_string(
+            "
 2022-06-01 06:00: arrived
 2022-06-01 07:00: workw1
 2022-06-01 07:10: ** tea
@@ -162,7 +228,8 @@ Total slacking: 1 h 5 min\n")
 2022-06-10 06:00: arrived
 2022-06-10 07:00: workw2
 2022-06-10 07:10: ** tea
-");
+",
+        );
 
         let a = Activities::new_from_entries(tl.get_week(&NaiveDate::from_ymd(2022, 6, 7)));
         assert_eq!(a.total_work, Duration::hours(3));
@@ -173,12 +240,14 @@ Total slacking: 1 h 5 min\n")
         assert_eq!(a.activities[1].name, "** tea");
         assert_eq!(a.activities[1].duration, Duration::minutes(20));
 
-        assert_eq!(format!("{}", a),
-" 3 h  0 min: workw2
+        assert_eq!(
+            format!("{}", a),
+            " 3 h  0 min: workw2
  0 h 20 min: ** tea
 -------
 Total work done: 3 h 0 min
 Total slacking: 0 h 20 min
-");
+"
+        );
     }
 }

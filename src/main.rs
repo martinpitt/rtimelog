@@ -1,5 +1,5 @@
-mod store;
 mod activity;
+mod store;
 
 use std::io::{self, Write};
 
@@ -16,20 +16,23 @@ fn clear_screen() {
 
 fn stdin_line() -> String {
     let mut buffer = String::new();
-    io::stdin().read_line(&mut buffer)
+    io::stdin()
+        .read_line(&mut buffer)
         .expect("Failed to read from stdlin");
     buffer.pop(); // eat \n
     buffer
 }
 
 fn show_help() {
-    println!("
+    println!(
+        "
 :w - switch to weekly mode
 :d - switch to daily mode
 :q - quit
 :h - show this help
 
-Any other input is the description of a task that you just finished.");
+Any other input is the description of a task that you just finished."
+    );
 }
 
 fn show_today(timelog: &Timelog) {
@@ -61,20 +64,19 @@ fn main() {
 
     while running {
         print!("\ncommand (:h for help) or entry: ");
-        io::stdout().flush()
-            .expect("Failed to flush stdout");
+        io::stdout().flush().expect("Failed to flush stdout");
         let input = stdin_line();
         match input.as_str() {
-            ":q" => { running = false },
+            ":q" => running = false,
             ":h" => show_help(),
             ":d" => {
                 time_mode = TimeMode::Day;
                 show(&timelog, &time_mode);
-            },
+            }
             ":w" => {
                 time_mode = TimeMode::Week;
                 show(&timelog, &time_mode);
-            },
+            }
             _ => {
                 timelog.add(input);
                 timelog.save();

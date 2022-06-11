@@ -2,9 +2,9 @@ extern crate chrono;
 extern crate dirs;
 
 use std::fmt;
-use std::fs::{File};
+use std::fs::File;
 use std::io::{self, prelude::*};
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
 use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
 
@@ -14,8 +14,7 @@ use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
 
 const TIME_FMT: &'static str = "%Y-%m-%d %H:%M";
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Entry {
     pub stop: NaiveDateTime,
     pub task: String,
@@ -42,12 +41,18 @@ impl Timelog {
     }
 
     pub fn new_from_file(path: &PathBuf) -> Timelog {
-        Timelog { entries: Timelog::parse(&Timelog::read(path)), filename: Some(path.clone()) }
+        Timelog {
+            entries: Timelog::parse(&Timelog::read(path)),
+            filename: Some(path.clone()),
+        }
     }
 
     #[cfg(test)]
     pub fn new_from_string(contents: &str) -> Timelog {
-        Timelog { entries: Timelog::parse(contents), filename: None }
+        Timelog {
+            entries: Timelog::parse(contents),
+            filename: None,
+        }
     }
 
     pub fn get_default_file() -> PathBuf {
@@ -64,7 +69,7 @@ impl Timelog {
                 f.read_to_string(&mut contents)
                     .expect(&format!("Failed to read {}", path.display()));
                 contents
-            },
+            }
 
             Err(e) => {
                 if e.kind() == io::ErrorKind::NotFound {
@@ -99,14 +104,20 @@ impl Timelog {
     fn parse_line(line: &str) -> Option<Entry> {
         let line = line.trim();
         if line.len() == 0 {
-            return None
+            return None;
         }
 
         if let Some((time, task)) = line.split_once(": ") {
             if let Ok(dt) = NaiveDateTime::parse_from_str(time, TIME_FMT) {
-                Some(Entry { stop: dt, task: task.to_string() })
+                Some(Entry {
+                    stop: dt,
+                    task: task.to_string(),
+                })
             } else {
-                eprintln!("WARNING: ignoring line with invalid date in timelog: {}", line);
+                eprintln!(
+                    "WARNING: ignoring line with invalid date in timelog: {}",
+                    line
+                );
                 None
             }
         } else {
@@ -134,21 +145,22 @@ impl Timelog {
     pub fn save(&self) {
         assert!(self.filename.is_some());
         let filename = self.filename.as_ref().unwrap();
-        let mut f = File::create(filename)
-            .expect(&format!("Failed to open {:?} for writing", filename));
-        write!(f, "{}", self.format_store())
-            .expect(&format!("Failed to write {:?}", filename));
+        let mut f =
+            File::create(filename).expect(&format!("Failed to open {:?} for writing", filename));
+        write!(f, "{}", self.format_store()).expect(&format!("Failed to write {:?}", filename));
     }
 
     #[cfg(test)]
     pub fn get_all(&self) -> impl Iterator<Item = &Entry> {
-        return self.entries.iter()
+        return self.entries.iter();
     }
 
     pub fn get_day(&self, day: &NaiveDate) -> impl Iterator<Item = &Entry> {
         let begin = day.and_hms(0, 0, 0);
         let end = day.and_hms(23, 59, 59);
-        self.entries.iter().filter(move |e| e.stop >= begin && e.stop <= end)
+        self.entries
+            .iter()
+            .filter(move |e| e.stop >= begin && e.stop <= end)
     }
 
     pub fn get_today(&self) -> impl Iterator<Item = &Entry> {
@@ -159,7 +171,9 @@ impl Timelog {
         let week = day.iso_week().week();
         let begin = NaiveDate::from_isoywd(day.year(), week, Weekday::Mon).and_hms(0, 0, 0);
         let end = NaiveDate::from_isoywd(day.year(), week + 1, Weekday::Mon).and_hms(0, 0, 0);
-        self.entries.iter().filter(move |e| e.stop >= begin && e.stop < end)
+        self.entries
+            .iter()
+            .filter(move |e| e.stop >= begin && e.stop < end)
     }
 
     pub fn get_this_week(&self) -> impl Iterator<Item = &Entry> {
@@ -167,10 +181,12 @@ impl Timelog {
     }
 
     pub fn add(&mut self, task: String) {
-        self.entries.push(Entry { task, stop: Local::now().naive_local() });
+        self.entries.push(Entry {
+            task,
+            stop: Local::now().naive_local(),
+        });
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -245,17 +261,22 @@ mod tests {
         let entries = Timelog::parse(TWO_DAYS);
         assert_eq!(entries.len(), 10);
         assert_eq!(&format!("{}", entries[0]), "2022-06-09 06:02: arrived");
-        assert_eq!(&format!("{}", entries[9]), "2022-06-10 16:00: customer joe: support");
+        assert_eq!(
+            &format!("{}", entries[9]),
+            "2022-06-10 16:00: customer joe: support"
+        );
     }
 
     #[test]
     #[should_panic]
     fn test_parse_out_of_order() {
-        Timelog::parse("
+        Timelog::parse(
+            "
 2022-06-09 06:02: arrived
 2022-06-09 06:10: ** tea
 2022-06-08 07:32: huh, previous day
-");
+",
+        );
     }
 
     #[test]
@@ -268,9 +289,15 @@ mod tests {
 
         let tl = Timelog::new_from_string(TWO_DAYS);
         let mut entries = tl.get_all();
-        assert_eq!(&format!("{}", entries.next().unwrap()), "2022-06-09 06:02: arrived");
+        assert_eq!(
+            &format!("{}", entries.next().unwrap()),
+            "2022-06-09 06:02: arrived"
+        );
         let mut entries = entries.skip(8);
-        assert_eq!(&format!("{}", entries.next().unwrap()), "2022-06-10 16:00: customer joe: support");
+        assert_eq!(
+            &format!("{}", entries.next().unwrap()),
+            "2022-06-10 16:00: customer joe: support"
+        );
         assert_eq!(entries.next(), None);
     }
 
@@ -282,15 +309,22 @@ mod tests {
         let tl = Timelog::new_from_string(TWO_DAYS);
         assert_eq!(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8)).next(), None);
 
-        let entries = tl.get_day(&NaiveDate::from_ymd(2022, 6, 9)).collect::<Vec<&Entry>>();
+        let entries = tl
+            .get_day(&NaiveDate::from_ymd(2022, 6, 9))
+            .collect::<Vec<&Entry>>();
         assert_eq!(entries.len(), 4);
         assert_eq!(&format!("{}", entries[0]), "2022-06-09 06:02: arrived");
         assert_eq!(&format!("{}", entries[3]), "2022-06-09 12:00: work");
 
-        let entries = tl.get_day(&NaiveDate::from_ymd(2022, 6, 10)).collect::<Vec<&Entry>>();
+        let entries = tl
+            .get_day(&NaiveDate::from_ymd(2022, 6, 10))
+            .collect::<Vec<&Entry>>();
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-10 07:00: arrived");
-        assert_eq!(&format!("{}", entries[5]), "2022-06-10 16:00: customer joe: support");
+        assert_eq!(
+            &format!("{}", entries[5]),
+            "2022-06-10 16:00: customer joe: support"
+        );
     }
 
     #[test]
@@ -300,13 +334,17 @@ mod tests {
 
         let tl = Timelog::new_from_string(TWO_WEEKS);
         // select Wed, data has Tue and Thu
-        let entries = tl.get_week(&NaiveDate::from_ymd(2022, 6, 2)).collect::<Vec<&Entry>>();
+        let entries = tl
+            .get_week(&NaiveDate::from_ymd(2022, 6, 2))
+            .collect::<Vec<&Entry>>();
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-01 06:00: arrived");
         assert_eq!(&format!("{}", entries[5]), "2022-06-03 07:10: ** tea");
 
         // select Tue, data has Wed to Fri
-        let entries = tl.get_week(&NaiveDate::from_ymd(2022, 6, 7)).collect::<Vec<&Entry>>();
+        let entries = tl
+            .get_week(&NaiveDate::from_ymd(2022, 6, 7))
+            .collect::<Vec<&Entry>>();
         assert_eq!(entries.len(), 7);
         assert_eq!(&format!("{}", entries[0]), "2022-06-08 06:00: arrived");
         assert_eq!(&format!("{}", entries[6]), "2022-06-10 07:00: workw2");

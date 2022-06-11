@@ -8,6 +8,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions: {}
     steps:
       - uses: actions/checkout@v2
 
@@ -26,3 +27,6 @@ jobs:
 
       - name: Run tests in release mode
         run: cargo test --release
+
+      - name: rustfmt
+        run: cargo fmt --all --check
