@@ -18,7 +18,7 @@ fn clear_screen() {
 fn stdin_line() -> Result<String, io::Error> {
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer)?;
-    buffer.pop(); // eat \n
+    buffer.truncate(buffer.trim_end().len());
     Ok(buffer)
 }
 
@@ -76,6 +76,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 time_mode = TimeMode::Week;
                 show(&timelog, &time_mode);
             }
+            "" => (),
             _ => {
                 timelog.add(input);
                 timelog.save()?;
