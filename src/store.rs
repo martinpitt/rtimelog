@@ -12,7 +12,7 @@ use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
  * Single timelog entry
  */
 
-const TIME_FMT: &'static str = "%Y-%m-%d %H:%M";
+const TIME_FMT: &str = "%Y-%m-%d %H:%M";
 
 #[derive(Debug, PartialEq)]
 pub struct Entry {
@@ -89,10 +89,8 @@ impl Timelog {
         for line in raw.lines() {
             if let Some(e) = Timelog::parse_line(line) {
                 // require a monotonously increasing file
-                if prev.is_some() {
-                    if e.stop < prev.unwrap() {
-                        panic!("line {} goes back in time", line);
-                    }
+                if prev.is_some() && e.stop < prev.unwrap() {
+                    panic!("line {} goes back in time", line);
                 }
                 prev = Some(e.stop);
                 entries.push(e);
@@ -103,7 +101,7 @@ impl Timelog {
 
     fn parse_line(line: &str) -> Option<Entry> {
         let line = line.trim();
-        if line.len() == 0 {
+        if line.is_empty() {
             return None;
         }
 
@@ -133,7 +131,7 @@ impl Timelog {
         for entry in &self.entries {
             // leave an empty line between days
             if prev.is_some() && prev.unwrap() != entry.stop.date() {
-                output.push_str("\n");
+                output.push('\n');
             }
             prev = Some(entry.stop.date());
             output.push_str(&format!("{}\n", entry));
