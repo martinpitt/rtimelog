@@ -67,7 +67,7 @@ impl Timelog {
             Ok(mut f) => {
                 let mut contents = String::new();
                 f.read_to_string(&mut contents)
-                    .expect(&format!("Failed to read {}", path.display()));
+                    .unwrap_or_else(|e| panic!("Failed to read {}: {:?}", path.display(), e));
                 contents
             }
 
@@ -142,12 +142,12 @@ impl Timelog {
         output
     }
 
-    pub fn save(&self) {
+    pub fn save(&self) -> Result<(), io::Error> {
         assert!(self.filename.is_some());
         let filename = self.filename.as_ref().unwrap();
-        let mut f =
-            File::create(filename).expect(&format!("Failed to open {:?} for writing", filename));
-        write!(f, "{}", self.format_store()).expect(&format!("Failed to write {:?}", filename));
+        let mut f = File::create(filename)?;
+        write!(f, "{}", self.format_store())?;
+        Ok(())
     }
 
     #[cfg(test)]

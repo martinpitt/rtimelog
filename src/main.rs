@@ -1,6 +1,7 @@
 mod activity;
 mod store;
 
+use std::error::Error;
 use std::io::{self, Write};
 
 use store::Timelog;
@@ -14,13 +15,11 @@ fn clear_screen() {
     print!("{esc}c", esc = 27 as char);
 }
 
-fn stdin_line() -> String {
+fn stdin_line() -> Result<String, io::Error> {
     let mut buffer = String::new();
-    io::stdin()
-        .read_line(&mut buffer)
-        .expect("Failed to read from stdlin");
+    io::stdin().read_line(&mut buffer)?;
     buffer.pop(); // eat \n
-    buffer
+    Ok(buffer)
 }
 
 fn show_help() {
@@ -55,7 +54,7 @@ fn show(timelog: &Timelog, mode: &TimeMode) {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let mut timelog = Timelog::new_from_default_file();
     let mut running = true;
     let mut time_mode = TimeMode::Day;
@@ -64,8 +63,8 @@ fn main() {
 
     while running {
         print!("\ncommand (:h for help) or entry: ");
-        io::stdout().flush().expect("Failed to flush stdout");
-        let input = stdin_line();
+        io::stdout().flush()?;
+        let input = stdin_line()?;
         match input.as_str() {
             ":q" => running = false,
             ":h" => show_help(),
@@ -79,9 +78,10 @@ fn main() {
             }
             _ => {
                 timelog.add(input);
-                timelog.save();
+                timelog.save()?;
                 show(&timelog, &time_mode);
             }
         }
     }
+    Ok(())
 }
