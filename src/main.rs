@@ -4,6 +4,8 @@ mod store;
 use std::error::Error;
 use std::io::{self, Write};
 
+use chrono::prelude::*;
+
 use store::Timelog;
 
 enum TimeMode {
@@ -34,24 +36,41 @@ Any other input is the description of a task that you just finished."
     );
 }
 
-fn show_today(timelog: &Timelog) {
-    println!("Work done today:");
-    let a = activity::Activities::new_from_entries(timelog.get_today());
-    println!("{}", a);
-}
-
-fn show_week(timelog: &Timelog) {
-    println!("Work done this week:");
-    let a = activity::Activities::new_from_entries(timelog.get_this_week());
-    println!("{}", a);
-}
-
 fn show(timelog: &Timelog, mode: &TimeMode) {
     clear_screen();
-    match mode {
-        TimeMode::Day => show_today(timelog),
-        TimeMode::Week => show_week(timelog),
-    }
+    let entries = match mode {
+        TimeMode::Day => {
+            println!("Work done today:");
+            timelog.get_today()
+        }
+        TimeMode::Week => {
+            println!("Work done this week:");
+            timelog.get_this_week()
+        }
+    };
+
+    let a = activity::Activities::new_from_entries(entries);
+    println!("{}", a);
+}
+
+fn show_prompt(timelog: &Timelog) -> Result<(), io::Error> {
+    let since_last = timelog
+        .get_today()
+        .last()
+        .map(|e| Local::now().naive_local().signed_duration_since(e.stop));
+
+    let since_str = match since_last {
+        None => "no entries yet today".to_string(),
+        Some(d) => format!(
+            "{} h {} min since last entry",
+            d.num_hours(),
+            d.num_minutes() % 60
+        ),
+    };
+
+    print!("\n{}; type command (:h for help) or entry\n> ", since_str);
+    io::stdout().flush()?;
+    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -62,8 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     show(&timelog, &time_mode);
 
     while running {
-        print!("\ncommand (:h for help) or entry: ");
-        io::stdout().flush()?;
+        show_prompt(&timelog)?;
         let input = stdin_line()?;
         match input.as_str() {
             ":q" => running = false,

@@ -19,7 +19,8 @@ Total work done: 11 h 3 min
 Total slacking: 3 h 44 min
 
 
-command (:h for help) or entry: :h
+0h 23 min since last entry; command (:h for help) or entry
+> :h
 
 :w - switch to weekly mode
 :d - switch to daily mode
@@ -28,7 +29,8 @@ command (:h for help) or entry: :h
 
 Any other input is the description of a task that you just finished.
 
-command (:h for help) or entry:
+0h 24 min since last entry; command (:h for help) or entry
+>
 ```
 
 Operation
