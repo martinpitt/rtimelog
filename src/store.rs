@@ -32,7 +32,7 @@ impl fmt::Display for Entry {
 
 pub struct Timelog {
     entries: Vec<Entry>,
-    filename: Option<PathBuf>,
+    pub filename: Option<PathBuf>,
 }
 
 impl Timelog {

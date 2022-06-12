@@ -26,6 +26,7 @@ Total slacking: 3 h 44 min
 :d - switch to daily mode
 :q - quit
 :h - show this help
+:e - open timelog.txt in $EDITOR
 
 Any other input is the description of a task that you just finished.
 
@@ -54,8 +55,8 @@ respectively.
 Type `:q` to end the program.
 
 Whenever you add an entry, it will be immediately saved to
-~/.gtimelog/timelog.txt. It's possible to manually edit the file, just be
-cautious to not break the format.
+~/.gtimelog/timelog.txt. It's possible to manually edit the file (directly or
+wiht the `:e` command), just be cautious to not break the format.
 
 Installation
 ------------
