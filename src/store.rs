@@ -156,28 +156,37 @@ impl Timelog {
         return self.entries.iter();
     }
 
-    pub fn get_day(&self, day: &NaiveDate) -> impl Iterator<Item = &Entry> {
-        let begin = day.and_hms(0, 0, 0);
-        let end = day.and_hms(23, 59, 59);
-        self.entries
+    pub fn get_time_range(&self, begin: NaiveDateTime, end: NaiveDateTime) -> &[Entry] {
+        let first = self
+            .entries
             .iter()
-            .filter(move |e| e.stop >= begin && e.stop <= end)
+            .position(move |e| e.stop >= begin)
+            .unwrap_or(self.entries.len());
+        let last = self
+            .entries
+            .iter()
+            .position(move |e| e.stop > end)
+            .unwrap_or(self.entries.len());
+
+        &self.entries[first..last]
     }
 
-    pub fn get_today(&self) -> impl Iterator<Item = &Entry> {
+    pub fn get_day(&self, day: &NaiveDate) -> &[Entry] {
+        self.get_time_range(day.and_hms(0, 0, 0), day.and_hms(23, 59, 59))
+    }
+
+    pub fn get_today(&self) -> &[Entry] {
         self.get_day(&Local::today().naive_local())
     }
 
-    pub fn get_week(&self, day: &NaiveDate) -> impl Iterator<Item = &Entry> {
+    pub fn get_week(&self, day: &NaiveDate) -> &[Entry] {
         let week = day.iso_week().week();
         let begin = NaiveDate::from_isoywd(day.year(), week, Weekday::Mon).and_hms(0, 0, 0);
         let end = NaiveDate::from_isoywd(day.year(), week + 1, Weekday::Mon).and_hms(0, 0, 0);
-        self.entries
-            .iter()
-            .filter(move |e| e.stop >= begin && e.stop < end)
+        self.get_time_range(begin, end)
     }
 
-    pub fn get_this_week(&self) -> impl Iterator<Item = &Entry> {
+    pub fn get_this_week(&self) -> &[Entry] {
         self.get_week(&Local::today().naive_local())
     }
 
@@ -305,21 +314,17 @@ mod tests {
     #[test]
     fn test_get_day() {
         let tl = Timelog::new_from_string("");
-        assert_eq!(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8)).next(), None);
+        assert_eq!(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8)), &[]);
 
         let tl = Timelog::new_from_string(TWO_DAYS);
-        assert_eq!(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8)).next(), None);
+        assert_eq!(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8)), &[]);
 
-        let entries = tl
-            .get_day(&NaiveDate::from_ymd(2022, 6, 9))
-            .collect::<Vec<&Entry>>();
+        let entries = tl.get_day(&NaiveDate::from_ymd(2022, 6, 9));
         assert_eq!(entries.len(), 4);
         assert_eq!(&format!("{}", entries[0]), "2022-06-09 06:02: arrived");
         assert_eq!(&format!("{}", entries[3]), "2022-06-09 12:00: work");
 
-        let entries = tl
-            .get_day(&NaiveDate::from_ymd(2022, 6, 10))
-            .collect::<Vec<&Entry>>();
+        let entries = tl.get_day(&NaiveDate::from_ymd(2022, 6, 10));
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-10 07:00: arrived");
         assert_eq!(
@@ -331,21 +336,17 @@ mod tests {
     #[test]
     fn test_get_week() {
         let tl = Timelog::new_from_string("");
-        assert_eq!(tl.get_week(&NaiveDate::from_ymd(2022, 6, 2)).next(), None);
+        assert_eq!(tl.get_week(&NaiveDate::from_ymd(2022, 6, 2)), &[]);
 
         let tl = Timelog::new_from_string(TWO_WEEKS);
         // select Wed, data has Tue and Thu
-        let entries = tl
-            .get_week(&NaiveDate::from_ymd(2022, 6, 2))
-            .collect::<Vec<&Entry>>();
+        let entries = tl.get_week(&NaiveDate::from_ymd(2022, 6, 2));
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-01 06:00: arrived");
         assert_eq!(&format!("{}", entries[5]), "2022-06-03 07:10: ** tea");
 
         // select Tue, data has Wed to Fri
-        let entries = tl
-            .get_week(&NaiveDate::from_ymd(2022, 6, 7))
-            .collect::<Vec<&Entry>>();
+        let entries = tl.get_week(&NaiveDate::from_ymd(2022, 6, 7));
         assert_eq!(entries.len(), 7);
         assert_eq!(&format!("{}", entries[0]), "2022-06-08 06:00: arrived");
         assert_eq!(&format!("{}", entries[6]), "2022-06-10 07:00: workw2");

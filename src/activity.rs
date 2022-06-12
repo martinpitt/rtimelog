@@ -36,7 +36,7 @@ pub struct Activities {
 }
 
 impl Activities {
-    pub fn new_from_entries<'a>(entries: impl Iterator<Item = &'a Entry>) -> Activities {
+    pub fn new_from_entries(entries: &[Entry]) -> Activities {
         // don't use a hashmap here, we do want to keep this sorted by "first occurrence of task"
         let mut activities = Vec::new();
         let mut total_work = Duration::minutes(0);
@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn test_activities_empty() {
-        let a = Activities::new_from_entries(vec![].iter());
+        let a = Activities::new_from_entries(&[]);
         assert_eq!(a.activities.len(), 0);
         assert_eq!(a.total_work, Duration::minutes(0));
         assert_eq!(a.total_slack, Duration::minutes(0));
