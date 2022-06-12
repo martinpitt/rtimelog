@@ -3,11 +3,12 @@ mod store;
 
 use std::env;
 use std::error::Error;
-use std::io::{self, Write};
+use std::io;
 use std::path::PathBuf;
 use std::process;
 
 use chrono::prelude::*;
+use rustyline::{error::ReadlineError, Editor};
 
 use store::Timelog;
 
@@ -20,11 +21,15 @@ fn clear_screen() {
     print!("{esc}c", esc = 27 as char);
 }
 
-fn stdin_line() -> Result<String, io::Error> {
-    let mut buffer = String::new();
-    io::stdin().read_line(&mut buffer)?;
-    buffer.truncate(buffer.trim_end().len());
-    Ok(buffer)
+fn get_input(rl: &mut Editor<()>) -> Result<String, ReadlineError> {
+    match rl.readline("> ") {
+        Ok(mut line) => {
+            line.truncate(line.trim_end().len());
+            Ok(line)
+        }
+        Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => Ok(":q".to_string()),
+        Err(e) => Err(e),
+    }
 }
 
 fn show_help() {
@@ -72,8 +77,7 @@ fn show_prompt(timelog: &Timelog) -> Result<(), io::Error> {
         ),
     };
 
-    print!("\n{}; type command (:h for help) or entry\n> ", since_str);
-    io::stdout().flush()?;
+    println!("\n{}; type command (:h for help) or entry", since_str);
     Ok(())
 }
 
@@ -88,12 +92,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut timelog = Timelog::new_from_default_file();
     let mut running = true;
     let mut time_mode = TimeMode::Day;
+    let mut readline = Editor::<()>::new();
 
     show(&timelog, &time_mode);
 
     while running {
         show_prompt(&timelog)?;
-        let input = stdin_line()?;
+
+        let input = get_input(&mut readline)?;
         match input.as_str() {
             ":q" => running = false,
             ":h" => show_help(),
