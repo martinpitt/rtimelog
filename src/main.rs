@@ -27,7 +27,9 @@ fn get_input(rl: &mut Editor<()>) -> Result<String, ReadlineError> {
             line.truncate(line.trim_end().len());
             Ok(line)
         }
-        Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => Ok(":q".to_string()),
+        // ^C: like in a shell, abort the current input
+        Err(ReadlineError::Interrupted) => Ok("".to_string()),
+        Err(ReadlineError::Eof) => Ok(":q".to_string()),
         Err(e) => Err(e),
     }
 }
