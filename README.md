@@ -27,6 +27,7 @@ Total slacking: 3 h 44 min
 :q - quit
 :h - show this help
 :e - open timelog.txt in $EDITOR
+^r - history search (like in bash) through currently shown activities
 
 Any other input is the description of a task that you just finished.
 

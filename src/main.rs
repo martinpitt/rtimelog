@@ -40,12 +40,13 @@ fn show_help() {
 :q - quit
 :h - show this help
 :e - open timelog.txt in $EDITOR
+^r - history search (like in bash) through currently shown activities
 
 Any other input is the description of a task that you just finished."
     );
 }
 
-fn show(timelog: &Timelog, mode: &TimeMode) {
+fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
     clear_screen();
     let entries = match mode {
         TimeMode::Day => {
@@ -60,6 +61,11 @@ fn show(timelog: &Timelog, mode: &TimeMode) {
 
     let a = activity::Activities::new_from_entries(entries);
     println!("{}", a);
+
+    rl_editor.clear_history();
+    for a in Timelog::get_history(entries) {
+        rl_editor.add_history_entry(a);
+    }
 }
 
 fn show_prompt(timelog: &Timelog) -> Result<(), io::Error> {
@@ -97,7 +103,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     while running {
         if do_show {
-            show(&timelog, &time_mode);
+            show(&timelog, &time_mode, &mut readline);
         }
         do_show = true;
         show_prompt(&timelog)?;

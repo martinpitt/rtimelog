@@ -1,6 +1,7 @@
 extern crate chrono;
 extern crate dirs;
 
+use std::collections::HashSet;
 use std::fmt;
 use std::fs::{self, File};
 use std::io::{self, prelude::*};
@@ -190,6 +191,22 @@ impl Timelog {
         self.get_week(&Local::today().naive_local())
     }
 
+    pub fn get_history(entries: &[Entry]) -> Vec<&String> {
+        let mut seen = HashSet::new();
+        entries
+            .iter()
+            .map(|e| &e.task)
+            .filter(|&t| {
+                if seen.contains(&t) {
+                    false
+                } else {
+                    seen.insert(t);
+                    true
+                }
+            })
+            .collect()
+    }
+
     pub fn add(&mut self, task: String) {
         self.entries.push(Entry {
             task,
@@ -357,6 +374,26 @@ mod tests {
         let tl = Timelog::new_from_string(TWO_DAYS);
         // simple roundtrip; but our constant starts with an empty line
         assert_eq!(tl.format_store(), TWO_DAYS.trim_start());
+    }
+
+    #[test]
+    fn test_get_history() {
+        let tl = Timelog::new_from_string("");
+        assert!(Timelog::get_history(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8))).is_empty());
+
+        let tl = Timelog::new_from_string(TWO_DAYS);
+        let entries = tl.get_day(&NaiveDate::from_ymd(2022, 6, 10));
+        assert_eq!(
+            Timelog::get_history(entries),
+            // no duplicate "rtimelog: code"
+            vec![
+                "arrived",
+                "rtimelog: code",
+                "**lunch",
+                "bug triage",
+                "customer joe: support"
+            ]
+        );
     }
 
     #[test]
