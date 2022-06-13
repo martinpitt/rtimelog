@@ -93,34 +93,36 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut running = true;
     let mut time_mode = TimeMode::Day;
     let mut readline = Editor::<()>::new();
-
-    show(&timelog, &time_mode);
+    let mut do_show = true;
 
     while running {
+        if do_show {
+            show(&timelog, &time_mode);
+        }
+        do_show = true;
         show_prompt(&timelog)?;
 
         let input = get_input(&mut readline)?;
         match input.as_str() {
             ":q" => running = false,
-            ":h" => show_help(),
+            ":h" => {
+                show_help();
+                do_show = false;
+            }
             ":e" => {
                 run_editor(&timelog.filename.unwrap());
                 timelog = Timelog::new_from_default_file();
-                show(&timelog, &time_mode);
             }
             ":d" => {
                 time_mode = TimeMode::Day;
-                show(&timelog, &time_mode);
             }
             ":w" => {
                 time_mode = TimeMode::Week;
-                show(&timelog, &time_mode);
             }
             "" => (),
             _ => {
                 timelog.add(input);
                 timelog.save()?;
-                show(&timelog, &time_mode);
             }
         }
     }
