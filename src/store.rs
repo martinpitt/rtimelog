@@ -18,6 +18,7 @@ extern crate dirs;
 
 use std::collections::HashSet;
 use std::fmt;
+use std::fmt::Write as _; // import without risk of name clashing
 use std::fs::{self, File};
 use std::io::{self, prelude::*};
 use std::path::PathBuf;
@@ -150,7 +151,7 @@ impl Timelog {
                 output.push('\n');
             }
             prev = Some(entry.stop.date());
-            output.push_str(&format!("{}\n", entry));
+            writeln!(output, "{}", entry).expect("failed to format entry");
         }
 
         output
