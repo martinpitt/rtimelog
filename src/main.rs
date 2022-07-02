@@ -44,6 +44,7 @@ fn get_input(rl: &mut Editor<()>) -> Result<String, ReadlineError> {
         }
         // ^C: like in a shell, abort the current input
         Err(ReadlineError::Interrupted) => Ok("".to_string()),
+        // ^D: like in a shell, exit
         Err(ReadlineError::Eof) => Ok(":q".to_string()),
         Err(e) => Err(e),
     }

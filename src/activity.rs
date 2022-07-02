@@ -60,12 +60,8 @@ impl Activities {
 
         for entry in entries {
             // first entry's task is ignored, it just provides the start time
-            if prev_stop.is_none() {
-                prev_stop = Some(entry.stop);
-                continue;
-            }
             // likewise, first entry of every day gets ignored
-            if prev_stop.unwrap().day() != entry.stop.day() {
+            if prev_stop.is_none() || prev_stop.unwrap().day() != entry.stop.day() {
                 prev_stop = Some(entry.stop);
                 continue;
             }
