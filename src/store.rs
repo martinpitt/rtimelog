@@ -31,7 +31,7 @@ use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
 
 const TIME_FMT: &str = "%Y-%m-%d %H:%M";
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Entry {
     pub stop: NaiveDateTime,
     pub task: String,
