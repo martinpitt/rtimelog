@@ -225,9 +225,11 @@ impl Timelog {
     }
 
     pub fn add(&mut self, task: String) {
+        let now = Local::now();
+        let naivenow = NaiveDate::from_ymd(now.year(), now.month(), now.day()).and_hms(now.hour(), now.minute(), now.second());
         self.entries.push(Entry {
             task,
-            stop: Local::now().naive_local(),
+            stop: naivenow,
         });
     }
 }
