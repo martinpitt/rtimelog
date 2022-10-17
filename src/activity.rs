@@ -17,7 +17,7 @@ extern crate chrono;
 
 use std::fmt;
 
-use chrono::{prelude::*, Duration, NaiveDateTime};
+use chrono::{Datelike, Duration, NaiveDateTime};
 
 use crate::store::Entry;
 
@@ -59,32 +59,41 @@ impl Activities {
         let mut prev_stop: Option<NaiveDateTime> = None;
 
         for entry in entries {
-            // first entry's task is ignored, it just provides the start time
-            // likewise, first entry of every day gets ignored
-            if prev_stop.is_none() || prev_stop.unwrap().day() != entry.stop.day() {
-                prev_stop = Some(entry.stop);
-                continue;
-            }
-            let duration = entry.stop.signed_duration_since(prev_stop.unwrap());
-            if entry.task.starts_with("**") {
-                total_slack = total_slack + duration;
-            } else {
-                total_work = total_work + duration;
-            }
+            match prev_stop {
+                Some(prev_stop_time) => {
+                    // continue if not the same day
+                    // first entry of every day gets ignored
+                    if prev_stop_time.day() != entry.stop.day() {
+                        prev_stop = Some(entry.stop);
+                        continue;
+                    }
 
-            // meh quadratic loop, but not important
-            match activities
-                .iter_mut()
-                .find(|a: &&mut Activity| a.name == entry.task)
-            {
-                Some(a) => a.duration = a.duration + duration,
-                None => activities.push(Activity {
-                    name: entry.task.to_string(),
-                    duration,
-                }),
-            }
+                    let duration = entry.stop.signed_duration_since(prev_stop_time);
+                    if entry.task.starts_with("**") {
+                        total_slack = total_slack + duration;
+                    } else {
+                        total_work = total_work + duration;
+                    }
 
-            prev_stop = Some(entry.stop);
+                    // meh quadratic loop, but not important
+                    match activities
+                        .iter_mut()
+                        .find(|a: &&mut Activity| a.name == entry.task)
+                    {
+                        Some(a) => a.duration = a.duration + duration,
+                        None => activities.push(Activity {
+                            name: entry.task.to_string(),
+                            duration,
+                        }),
+                    }
+
+                    prev_stop = Some(entry.stop);
+                },
+                None => {
+                    // first entry's task is ignored, it just provides the start time
+                    prev_stop = Some(entry.stop);
+                }
+            }
         }
 
         Activities {
