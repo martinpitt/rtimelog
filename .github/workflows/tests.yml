@@ -23,7 +23,9 @@ jobs:
         run: cargo test
 
       - name: Build release mode
-        run: cargo rustc --release -- -Dwarnings
+        run: |
+          cargo rustc --release --lib -- -Dwarnings
+          cargo rustc --release --bin rtimelog -- -Dwarnings
 
       - name: Run tests in release mode
         run: cargo test --release

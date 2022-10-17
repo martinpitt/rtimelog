@@ -13,9 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod activity;
-mod store;
-
 use std::env;
 use std::error::Error;
 use std::io;
@@ -25,7 +22,7 @@ use std::process;
 use chrono::prelude::*;
 use rustyline::{error::ReadlineError, Editor};
 
-use store::Timelog;
+use rtimelog::store::Timelog;
 
 enum TimeMode {
     Day,
@@ -77,7 +74,7 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
         }
     };
 
-    let a = activity::Activities::new_from_entries(entries);
+    let a = rtimelog::activity::Activities::new_from_entries(entries);
     println!("{}", a);
 
     rl_editor.clear_history();
