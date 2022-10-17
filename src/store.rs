@@ -31,7 +31,7 @@ use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
 
 const TIME_FMT: &str = "%Y-%m-%d %H:%M";
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub stop: NaiveDateTime,
     pub task: String,
@@ -47,6 +47,7 @@ impl fmt::Display for Entry {
  * Collection of all entries
  */
 
+#[derive(Default, Debug)]
 pub struct Timelog {
     entries: Vec<Entry>,
     pub filename: Option<PathBuf>,
