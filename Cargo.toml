@@ -13,4 +13,4 @@ name = "rtimelog"
 [dependencies]
 chrono = "0.4"
 dirs = "4"
-rustyline = "9"
+rustyline = "10"

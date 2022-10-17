@@ -113,7 +113,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut timelog = Timelog::new_from_default_file();
     let mut running = true;
     let mut time_mode = TimeMode::Day;
-    let mut readline = Editor::<()>::new();
+    let mut readline = Editor::<()>::new()?;
     let mut do_show = true;
 
     while running {
