@@ -81,7 +81,7 @@ impl Timelog {
     }
 
     fn read(path: &PathBuf) -> String {
-        match File::open(&path) {
+        match File::open(path) {
             Ok(mut f) => {
                 let mut contents = String::new();
                 f.read_to_string(&mut contents)
