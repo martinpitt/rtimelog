@@ -190,22 +190,31 @@ impl Timelog {
     }
 
     pub fn get_day(&self, day: &NaiveDate) -> &[Entry] {
-        self.get_time_range(day.and_hms(0, 0, 0), day.and_hms(23, 59, 59))
+        self.get_time_range(
+            day.and_hms_opt(0, 0, 0).unwrap(),
+            day.and_hms_opt(23, 59, 59).unwrap(),
+        )
     }
 
     pub fn get_today(&self) -> &[Entry] {
-        self.get_day(&Local::today().naive_local())
+        self.get_day(&Local::now().date_naive())
     }
 
     pub fn get_week(&self, day: &NaiveDate) -> &[Entry] {
         let week = day.iso_week().week();
-        let begin = NaiveDate::from_isoywd(day.year(), week, Weekday::Mon).and_hms(0, 0, 0);
-        let end = NaiveDate::from_isoywd(day.year(), week + 1, Weekday::Mon).and_hms(0, 0, 0);
+        let begin = NaiveDate::from_isoywd_opt(day.year(), week, Weekday::Mon)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        let end = NaiveDate::from_isoywd_opt(day.year(), week + 1, Weekday::Mon)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
         self.get_time_range(begin, end)
     }
 
     pub fn get_this_week(&self) -> &[Entry] {
-        self.get_week(&Local::today().naive_local())
+        self.get_week(&Local::now().date_naive())
     }
 
     pub fn get_history(entries: &[Entry]) -> Vec<&String> {
@@ -226,11 +235,10 @@ impl Timelog {
 
     pub fn add(&mut self, task: String) {
         let now = Local::now();
-        let naivenow = NaiveDate::from_ymd(now.year(), now.month(), now.day()).and_hms(
-            now.hour(),
-            now.minute(),
-            now.second(),
-        );
+        let naivenow = NaiveDate::from_ymd_opt(now.year(), now.month(), now.day())
+            .unwrap()
+            .and_hms_opt(now.hour(), now.minute(), now.second())
+            .unwrap();
         self.entries.push(Entry {
             task,
             stop: naivenow,
@@ -354,17 +362,23 @@ mod tests {
     #[test]
     fn test_get_day() {
         let tl = Timelog::new_from_string("");
-        assert_eq!(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8)), &[]);
+        assert_eq!(
+            tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap()),
+            &[]
+        );
 
         let tl = Timelog::new_from_string(TWO_DAYS);
-        assert_eq!(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8)), &[]);
+        assert_eq!(
+            tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap()),
+            &[]
+        );
 
-        let entries = tl.get_day(&NaiveDate::from_ymd(2022, 6, 9));
+        let entries = tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 9).unwrap());
         assert_eq!(entries.len(), 4);
         assert_eq!(&format!("{}", entries[0]), "2022-06-09 06:02: arrived");
         assert_eq!(&format!("{}", entries[3]), "2022-06-09 12:00: work");
 
-        let entries = tl.get_day(&NaiveDate::from_ymd(2022, 6, 10));
+        let entries = tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap());
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-10 07:00: arrived");
         assert_eq!(
@@ -376,17 +390,20 @@ mod tests {
     #[test]
     fn test_get_week() {
         let tl = Timelog::new_from_string("");
-        assert_eq!(tl.get_week(&NaiveDate::from_ymd(2022, 6, 2)), &[]);
+        assert_eq!(
+            tl.get_week(&NaiveDate::from_ymd_opt(2022, 6, 2).unwrap()),
+            &[]
+        );
 
         let tl = Timelog::new_from_string(TWO_WEEKS);
         // select Wed, data has Tue and Thu
-        let entries = tl.get_week(&NaiveDate::from_ymd(2022, 6, 2));
+        let entries = tl.get_week(&NaiveDate::from_ymd_opt(2022, 6, 2).unwrap());
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-01 06:00: arrived");
         assert_eq!(&format!("{}", entries[5]), "2022-06-03 07:10: ** tea");
 
         // select Tue, data has Wed to Fri
-        let entries = tl.get_week(&NaiveDate::from_ymd(2022, 6, 7));
+        let entries = tl.get_week(&NaiveDate::from_ymd_opt(2022, 6, 7).unwrap());
         assert_eq!(entries.len(), 7);
         assert_eq!(&format!("{}", entries[0]), "2022-06-08 06:00: arrived");
         assert_eq!(&format!("{}", entries[6]), "2022-06-10 07:00: workw2");
@@ -402,10 +419,13 @@ mod tests {
     #[test]
     fn test_get_history() {
         let tl = Timelog::new_from_string("");
-        assert!(Timelog::get_history(tl.get_day(&NaiveDate::from_ymd(2022, 6, 8))).is_empty());
+        assert!(
+            Timelog::get_history(tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap()))
+                .is_empty()
+        );
 
         let tl = Timelog::new_from_string(TWO_DAYS);
-        let entries = tl.get_day(&NaiveDate::from_ymd(2022, 6, 10));
+        let entries = tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap());
         assert_eq!(
             Timelog::get_history(entries),
             // no duplicate "rtimelog: code"

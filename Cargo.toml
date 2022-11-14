@@ -11,6 +11,6 @@ edition = "2021"
 name = "rtimelog"
 
 [dependencies]
-chrono = "0.4"
+chrono = "0.4.23"
 dirs = "4"
 rustyline = "10"

@@ -200,7 +200,9 @@ mod tests {
 ",
         );
 
-        let a = Activities::new_from_entries(tl.get_day(&NaiveDate::from_ymd(2022, 6, 10)));
+        let a = Activities::new_from_entries(
+            tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap()),
+        );
         assert_eq!(a.total_work, Duration::minutes(475));
         assert_eq!(a.total_slack, Duration::minutes(65));
         assert_eq!(a.activities.len(), 7);
@@ -251,7 +253,9 @@ Total slacking: 1 h 5 min\n"
 ",
         );
 
-        let a = Activities::new_from_entries(tl.get_week(&NaiveDate::from_ymd(2022, 6, 7)));
+        let a = Activities::new_from_entries(
+            tl.get_week(&NaiveDate::from_ymd_opt(2022, 6, 7).unwrap()),
+        );
         assert_eq!(a.total_work, Duration::hours(3));
         assert_eq!(a.total_slack, Duration::minutes(20));
         assert_eq!(a.activities.len(), 2);
