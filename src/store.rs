@@ -15,6 +15,7 @@
 
 extern crate chrono;
 extern crate dirs;
+extern crate once_cell;
 
 use std::collections::HashSet;
 use std::env;
@@ -25,13 +26,14 @@ use std::io::{self, prelude::*};
 use std::path::{Path, PathBuf};
 
 use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
+use once_cell::sync::Lazy;
 
 /**
  * Single timelog entry
  */
 
-static DEFAULT_DATA_HOME: &str = "~/.local/share";
-static LEGACY_DEFAULT_HOME: &str = "~/.gtimelog";
+static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| dirs::data_dir().unwrap());
+static HOME_DIR: Lazy<PathBuf> = Lazy::new(|| dirs::home_dir().unwrap());
 const TIME_FMT: &str = "%Y-%m-%d %H:%M";
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
@@ -98,12 +100,15 @@ impl Timelog {
     }
 
     fn get_legacy_config_dir() -> String {
-        let envar_home = match env::var_os("GTIMELOG_HOME") {
+        let home_dir = match env::var_os("GTIMELOG_HOME") {
             Some(val) => val.into_string().unwrap(),
-            None => LEGACY_DEFAULT_HOME.to_string(),
+            None => {
+                let mut parent_dir = PathBuf::from(HOME_DIR.as_path());
+                parent_dir.push(".gtimelog");
+                parent_dir.into_os_string().into_string().unwrap()
+            }
         };
-
-        envar_home
+        home_dir
     }
 
     fn get_data_dir() -> String {
@@ -111,19 +116,17 @@ impl Timelog {
         let data_dir = if legacy.is_dir() {
             legacy.into_os_string().into_string().unwrap()
         } else {
-            let mut parent_dir = PathBuf::from(match env::var_os("XDG_DATA_HOME") {
-                Some(val) => val.into_string().unwrap(),
-                None => DEFAULT_DATA_HOME.to_string(),
-            });
+            let mut parent_dir = match env::var_os("XDG_DATA_HOME") {
+                Some(val) => PathBuf::from(val.into_string().unwrap()),
+                None => PathBuf::from(DATA_DIR.as_path()),
+            };
             parent_dir.push("gtimelog");
             parent_dir.into_os_string().into_string().unwrap()
         };
-
         data_dir
     }
 
     pub fn get_default_file() -> PathBuf {
-//      let mut log_path = dirs::home_dir().expect("Cannot determine home directory");
         let mut log_path = Self::expand_tilde(Self::get_data_dir()).unwrap();
         log_path.push("timelog.txt");
         log_path
