@@ -75,7 +75,9 @@ impl Timelog {
 
     pub fn get_default_file() -> PathBuf {
         let mut log_path = dirs::home_dir().expect("Cannot determine home directory");
-        log_path.push(".gtimelog");
+        log_path.push(".local");
+        log_path.push("share");
+        log_path.push("gtimelog");
         log_path.push("timelog.txt");
         log_path
     }
