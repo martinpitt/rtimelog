@@ -76,6 +76,7 @@ impl Timelog {
         }
     }
 
+    // https://stackoverflow.com/questions/54267608/expand-tilde-in-rust-path-idiomatically
     fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Option<PathBuf> {
         let p = path_user_input.as_ref();
         if !p.starts_with("~") {
@@ -106,15 +107,16 @@ impl Timelog {
     }
 
     fn get_data_dir() -> String {
-        let legacy = Self::get_legacy_config_dir();
-        let is_legacy = Path::new(&legacy).is_dir();
-        let data_dir = if is_legacy {
-            legacy
+        let legacy = Self::expand_tilde(Self::get_legacy_config_dir()).unwrap();
+        let data_dir = if legacy.is_dir() {
+            legacy.into_os_string().into_string().unwrap()
         } else {
-            match env::var_os("XDG_DATA_HOME") {
+            let mut parent_dir = PathBuf::from(match env::var_os("XDG_DATA_HOME") {
                 Some(val) => val.into_string().unwrap(),
                 None => DEFAULT_DATA_HOME.to_string(),
-            }
+            });
+            parent_dir.push("gtimelog");
+            parent_dir.into_os_string().into_string().unwrap()
         };
 
         data_dir
@@ -123,7 +125,6 @@ impl Timelog {
     pub fn get_default_file() -> PathBuf {
 //      let mut log_path = dirs::home_dir().expect("Cannot determine home directory");
         let mut log_path = Self::expand_tilde(Self::get_data_dir()).unwrap();
-        log_path.push("gtimelog");
         log_path.push("timelog.txt");
         log_path
     }
