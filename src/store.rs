@@ -15,7 +15,6 @@
 
 extern crate chrono;
 extern crate dirs;
-extern crate once_cell;
 
 use std::collections::HashSet;
 use std::env;
@@ -26,14 +25,11 @@ use std::io::{self, prelude::*};
 use std::path::{Path, PathBuf};
 
 use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
-use once_cell::sync::Lazy;
 
 /**
  * Single timelog entry
  */
 
-static DATA_DIR: Lazy<PathBuf> = Lazy::new(|| dirs::data_dir().unwrap());
-static HOME_DIR: Lazy<PathBuf> = Lazy::new(|| dirs::home_dir().unwrap());
 const TIME_FMT: &str = "%Y-%m-%d %H:%M";
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
@@ -103,7 +99,7 @@ impl Timelog {
         let home_dir = match env::var_os("GTIMELOG_HOME") {
             Some(val) => val.into_string().unwrap(),
             None => {
-                let mut parent_dir = PathBuf::from(HOME_DIR.as_path());
+                let mut parent_dir = dirs::home_dir().unwrap();
                 parent_dir.push(".gtimelog");
                 parent_dir.into_os_string().into_string().unwrap()
             }
@@ -118,7 +114,7 @@ impl Timelog {
         } else {
             let mut parent_dir = match env::var_os("XDG_DATA_HOME") {
                 Some(val) => PathBuf::from(val.into_string().unwrap()),
-                None => PathBuf::from(DATA_DIR.as_path()),
+                None => dirs::data_dir().unwrap(),
             };
             parent_dir.push("gtimelog");
             parent_dir.into_os_string().into_string().unwrap()
