@@ -22,7 +22,7 @@ use std::fmt;
 use std::fmt::Write as _; // import without risk of name clashing
 use std::fs::{self, File};
 use std::io::{self, prelude::*};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
 
@@ -74,56 +74,19 @@ impl Timelog {
         }
     }
 
-    // https://stackoverflow.com/questions/54267608/expand-tilde-in-rust-path-idiomatically
-    fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Option<PathBuf> {
-        let p = path_user_input.as_ref();
-        if !p.starts_with("~") {
-            return Some(p.to_path_buf());
-        }
-        if p == Path::new("~") {
-            return dirs::home_dir();
-        }
-        dirs::home_dir().map(|mut h| {
-            if h == Path::new("/") {
-                // Corner case: `h` root directory;
-                // don't prepend extra `/`, just drop the tilde.
-                p.strip_prefix("~").unwrap().to_path_buf()
-            } else {
-                h.push(p.strip_prefix("~/").unwrap());
-                h
-            }
-        })
-    }
-
-    fn get_legacy_config_dir() -> String {
-        let home_dir = match env::var_os("GTIMELOG_HOME") {
-            Some(val) => val.into_string().unwrap(),
-            None => {
-                let mut parent_dir = dirs::home_dir().unwrap();
-                parent_dir.push(".gtimelog");
-                parent_dir.into_os_string().into_string().unwrap()
-            }
-        };
-        home_dir
-    }
-
-    fn get_data_dir() -> String {
-        let legacy = Self::expand_tilde(Self::get_legacy_config_dir()).unwrap();
-        let data_dir = if legacy.is_dir() {
-            legacy.into_os_string().into_string().unwrap()
+    pub fn get_default_file() -> PathBuf {
+        let mut legacy_dir = dirs::home_dir().unwrap();
+        legacy_dir.push(".gtimelog");
+        let mut log_path = if legacy_dir.is_dir() {
+            legacy_dir
         } else {
-            let mut parent_dir = match env::var_os("XDG_DATA_HOME") {
+            let mut data_dir = match env::var_os("XDG_DATA_HOME") {
                 Some(val) => PathBuf::from(val.into_string().unwrap()),
                 None => dirs::data_dir().unwrap(),
             };
-            parent_dir.push("gtimelog");
-            parent_dir.into_os_string().into_string().unwrap()
+            data_dir.push("gtimelog");
+            data_dir
         };
-        data_dir
-    }
-
-    pub fn get_default_file() -> PathBuf {
-        let mut log_path = Self::expand_tilde(Self::get_data_dir()).unwrap();
         log_path.push("timelog.txt");
         log_path
     }
