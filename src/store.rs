@@ -17,6 +17,7 @@ extern crate chrono;
 extern crate dirs;
 
 use std::collections::HashSet;
+use std::env;
 use std::fmt;
 use std::fmt::Write as _; // import without risk of name clashing
 use std::fs::{self, File};
@@ -74,8 +75,18 @@ impl Timelog {
     }
 
     pub fn get_default_file() -> PathBuf {
-        let mut log_path = dirs::home_dir().expect("Cannot determine home directory");
-        log_path.push(".gtimelog");
+        let mut legacy_dir = dirs::home_dir().unwrap();
+        legacy_dir.push(".gtimelog");
+        let mut log_path = if legacy_dir.is_dir() {
+            legacy_dir
+        } else {
+            let mut data_dir = match env::var_os("XDG_DATA_HOME") {
+                Some(val) => PathBuf::from(val.into_string().unwrap()),
+                None => dirs::data_dir().unwrap(),
+            };
+            data_dir.push("gtimelog");
+            data_dir
+        };
         log_path.push("timelog.txt");
         log_path
     }
