@@ -5,7 +5,7 @@ rtimelog is a simple console/text based time tracker. It is inspired by
 [gtimelog](https://gtimelog.org/) and uses the same data format and data file
 (`~/.gtimelog/timelog.txt`), so you can use gtimelog and rtimelog in parallel.
 
-Hoever, it has far fewer features. This was a toy project for learning Rust,
+However, it has far fewer features. This was a toy project for learning Rust,
 and I don't use many gtimelog features myself. If you need one, please feel
 free to send a PR, or file an issue.
 
@@ -78,6 +78,6 @@ you can run it with
 
 Run the unit tests with
 
-    cargo build
+    cargo test
 
 ![tests](https://github.com/martinpitt/rtimelog/actions/workflows/tests.yml/badge.svg)
