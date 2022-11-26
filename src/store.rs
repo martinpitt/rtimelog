@@ -211,6 +211,10 @@ impl Timelog {
         self.get_day(&Local::now().date_naive())
     }
 
+    pub fn get_today_as_string(&self) -> String {
+        Local::now().format("%A, %F (week %U)").to_string()
+    }
+
     pub fn get_week(&self, day: &NaiveDate) -> &[Entry] {
         let week = day.iso_week().week();
         let begin = NaiveDate::from_isoywd_opt(day.year(), week, Weekday::Mon)
