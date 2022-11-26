@@ -65,7 +65,7 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
     clear_screen();
     let entries = match mode {
         TimeMode::Day => {
-            println!("Work done today:");
+            println!("Work done today {}:", timelog.get_today_as_string());
             timelog.get_today()
         }
         TimeMode::Week => {
