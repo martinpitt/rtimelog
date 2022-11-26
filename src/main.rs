@@ -69,7 +69,7 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
             timelog.get_today()
         }
         TimeMode::Week => {
-            println!("Work done this week:");
+            println!("Work done this week {}:", timelog.get_this_week_as_string());
             timelog.get_this_week()
         }
     };

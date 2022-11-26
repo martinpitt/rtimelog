@@ -232,6 +232,14 @@ impl Timelog {
         self.get_week(&Local::now().date_naive())
     }
 
+    pub fn get_this_week_as_string(&self) -> String {
+        let now_local = Local::now();
+        let week_begin = now_local.day() - now_local.weekday().num_days_from_monday();
+        let week_end = week_begin + 6;
+        let this_week = format!("{} {}-{}", now_local.format("%B"), week_begin, week_end);
+        format!("{} ({})", now_local.format("%Y, week %U"), this_week)
+    }
+
     pub fn get_history(entries: &[Entry]) -> Vec<&String> {
         let mut seen = HashSet::new();
         entries
