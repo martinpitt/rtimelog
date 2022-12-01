@@ -24,7 +24,7 @@ use std::fs::{self, File};
 use std::io::{self, prelude::*};
 use std::path::PathBuf;
 
-use chrono::{prelude::*, Local, NaiveDate, NaiveDateTime, Weekday};
+use chrono::{prelude::*, Duration, Local, NaiveDate, NaiveDateTime, Weekday};
 
 /**
  * Single timelog entry
@@ -234,9 +234,22 @@ impl Timelog {
 
     pub fn get_this_week_as_string(&self) -> String {
         let now_local = Local::now();
-        let week_begin = now_local.day() - now_local.weekday().num_days_from_monday();
-        let week_end = week_begin + 6;
-        let this_week = format!("{} {}-{}", now_local.format("%B"), week_begin, week_end);
+        let week_begin = now_local
+            .checked_sub_signed(Duration::days(
+                now_local.weekday().num_days_from_monday().into(),
+            ))
+            .unwrap();
+        let week_end = week_begin.checked_add_signed(Duration::days(6)).unwrap();
+        let this_week = if week_begin.month() == now_local.month() {
+            format!(
+                "{} {}-{}",
+                now_local.format("%B"),
+                week_begin.day(),
+                week_end.day()
+            )
+        } else {
+            format!("{}-{}", week_begin.format("%B %e"), week_end.day())
+        };
         format!("{} ({})", now_local.format("%Y, week %W"), this_week)
     }
 
