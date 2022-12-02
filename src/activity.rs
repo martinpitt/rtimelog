@@ -130,6 +130,7 @@ mod tests {
     use super::*;
     use crate::store::Timelog;
     use chrono::NaiveDate;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_activity_display() {

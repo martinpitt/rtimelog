@@ -273,6 +273,7 @@ impl Timelog {
 mod tests {
     use super::*;
     use chrono::Duration;
+    use pretty_assertions::assert_eq;
 
     const TWO_DAYS: &'static str = "
 2022-06-09 06:02: arrived
