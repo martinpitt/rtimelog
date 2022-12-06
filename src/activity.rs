@@ -69,7 +69,7 @@ impl Activities {
                     }
 
                     let duration = entry.stop.signed_duration_since(prev_stop_time);
-                    if entry.task.starts_with("**") {
+                    if entry.task.contains("**") {
                         total_slack = total_slack + duration;
                     } else {
                         total_work = total_work + duration;
