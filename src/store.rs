@@ -212,7 +212,7 @@ impl Timelog {
     }
 
     pub fn get_today_as_string(&self) -> String {
-        Local::now().format("%A, %F (week %U)").to_string()
+        Local::now().format("%A, %F (week %W)").to_string()
     }
 
     pub fn get_week(&self, day: &NaiveDate) -> &[Entry] {
@@ -237,7 +237,7 @@ impl Timelog {
         let week_begin = now_local.day() - now_local.weekday().num_days_from_monday();
         let week_end = week_begin + 6;
         let this_week = format!("{} {}-{}", now_local.format("%B"), week_begin, week_end);
-        format!("{} ({})", now_local.format("%Y, week %U"), this_week)
+        format!("{} ({})", now_local.format("%Y, week %W"), this_week)
     }
 
     pub fn get_history(entries: &[Entry]) -> Vec<&String> {
