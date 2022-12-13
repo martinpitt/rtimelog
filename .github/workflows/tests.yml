@@ -35,3 +35,8 @@ jobs:
 
       - name: clippy
         run: cargo clippy --all-features -- -Dwarnings
+
+      - name: deny
+        run: |
+          cargo install cargo-deny
+          cargo deny check
