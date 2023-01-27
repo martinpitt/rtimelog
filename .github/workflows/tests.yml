@@ -11,32 +11,11 @@ jobs:
     permissions: {}
     steps:
       - uses: actions/checkout@v3
+      - run: test/run-container.sh
 
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Build debug mode
-        run: cargo build
-
-      - name: Run tests in debug mode
-        run: cargo test
-
-      - name: Build release mode
-        run: |
-          cargo rustc --release --lib -- -Dwarnings
-          cargo rustc --release --bin rtimelog -- -Dwarnings
-
-      - name: Run tests in release mode
-        run: cargo test --release
-
-      - name: rustfmt
-        run: cargo fmt --all --check
-
-      - name: clippy
-        run: cargo clippy --all-features -- -Dwarnings
-
-      - name: deny
-        run: |
-          cargo install cargo-deny
-          cargo deny check
+  cargo-deny:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: EmbarkStudios/cargo-deny-action@v1
