@@ -107,7 +107,7 @@ impl Activities {
 impl fmt::Display for Activities {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for a in &self.activities {
-            writeln!(f, "{}", a)?;
+            writeln!(f, "{a}")?;
         }
         writeln!(f, "-------")?;
         writeln!(

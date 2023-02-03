@@ -119,7 +119,7 @@ impl Timelog {
             if let Some(e) = Timelog::parse_line(line) {
                 // require a monotonously increasing file
                 if prev.is_some() && e.stop < prev.unwrap() {
-                    panic!("line {} goes back in time", line);
+                    panic!("line {line} goes back in time");
                 }
                 prev = Some(e.stop);
                 entries.push(e);
@@ -141,14 +141,11 @@ impl Timelog {
                     task: task.to_string(),
                 })
             } else {
-                eprintln!(
-                    "WARNING: ignoring line with invalid date in timelog: {}",
-                    line
-                );
+                eprintln!("WARNING: ignoring line with invalid date in timelog: {line}");
                 None
             }
         } else {
-            eprintln!("WARNING: ignoring invalid line in timelog: {}", line);
+            eprintln!("WARNING: ignoring invalid line in timelog: {line}");
             None
         }
     }
@@ -163,7 +160,7 @@ impl Timelog {
                 output.push('\n');
             }
             prev = Some(entry.stop.date());
-            writeln!(output, "{}", entry).expect("failed to format entry");
+            writeln!(output, "{entry}").expect("failed to format entry");
         }
 
         output
