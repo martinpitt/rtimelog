@@ -75,7 +75,7 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
     };
 
     let a = rtimelog::activity::Activities::new_from_entries(entries);
-    println!("{}", a);
+    println!("{a}");
 
     rl_editor.clear_history();
     for a in Timelog::get_history(entries) {
@@ -98,7 +98,7 @@ fn show_prompt(timelog: &Timelog) -> Result<(), io::Error> {
         ),
     };
 
-    println!("\n{}; type command (:h for help) or entry", since_str);
+    println!("\n{since_str}; type command (:h for help) or entry");
     Ok(())
 }
 
