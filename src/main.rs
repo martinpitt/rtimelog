@@ -22,12 +22,8 @@ use std::process;
 use chrono::prelude::*;
 use rustyline::{error::ReadlineError, Editor};
 
+use rtimelog::commands::{Command, TimeMode};
 use rtimelog::store::Timelog;
-
-enum TimeMode {
-    Day,
-    Week,
-}
 
 fn clear_screen() {
     print!("{esc}c", esc = 27 as char);
@@ -124,27 +120,25 @@ fn main() -> Result<(), Box<dyn Error>> {
         do_show = true;
         show_prompt(&timelog)?;
 
-        let input = get_input(&mut readline)?;
-        match input.as_str() {
-            ":q" => running = false,
-            ":h" => {
+        match Command::parse(get_input(&mut readline)?) {
+            Command::Nothing => (),
+            Command::Quit => running = false,
+            Command::Help => {
                 show_help();
                 do_show = false;
             }
-            ":e" => {
+            Command::Edit => {
                 run_editor(&timelog.filename.unwrap());
                 timelog = Timelog::new_from_default_file();
             }
-            ":d" => {
-                time_mode = TimeMode::Day;
-            }
-            ":w" => {
-                time_mode = TimeMode::Week;
-            }
-            "" => (),
-            _ => {
-                timelog.add(input);
+            Command::SwitchMode(m) => time_mode = m,
+            Command::Add(a) => {
+                timelog.add(a);
                 timelog.save()?;
+            }
+            Command::Error(e) => {
+                println!("Error: {}", e);
+                do_show = false;
             }
         }
     }
