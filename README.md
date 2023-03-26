@@ -53,8 +53,22 @@ Installation
 ------------
 The [releases page](https://github.com/martinpitt/rtimelog/releases) has
 automatically built binaries for Linux, Windows, and MacOS. Download the
-archive for your operating system, unpack it, and run `rtimelog`. You can copy
-that to `/usr/local/bin/` or `~/.bin/` of course.
+archive for your operating system, unpack it, and run `rtimelog` from the
+unpack directory.
+
+On Linux, if you want to run rtimelog without specifying a path, you can
+install rtimelog into your home directory:
+
+```sh
+mkdir -p ~/bin
+tar -C ~/bin -xvf rtimelog_*-linux*.tar.xz
+```
+
+or as administrator for all users:
+
+```sh
+sudo tar -C /usr/local/bin -xvf rtimelog_*-linux*.tar.xz
+```
 
 Building
 --------
