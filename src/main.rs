@@ -63,14 +63,15 @@ Any other input is the description of a task that you just finished."
 
 fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
     clear_screen();
+    let today = Local::now().date_naive();
     let entries = match mode {
         TimeMode::Day => {
             println!("Work done today {}:", timelog.get_today_as_string());
-            timelog.get_today()
+            timelog.get_n_days(&today, 1)
         }
         TimeMode::Week => {
             println!("Work done this week {}:", timelog.get_this_week_as_string());
-            timelog.get_this_week()
+            timelog.get_n_weeks(&today, 1)
         }
     };
 
@@ -85,7 +86,7 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
 
 fn show_prompt(timelog: &Timelog) -> Result<(), io::Error> {
     let since_last = timelog
-        .get_today()
+        .get_n_days(&Local::now().date_naive(), 1)
         .last()
         .map(|e| Local::now().naive_local().signed_duration_since(e.stop));
 

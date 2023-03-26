@@ -197,36 +197,24 @@ impl Timelog {
         &self.entries[first..last]
     }
 
-    pub fn get_day(&self, day: &NaiveDate) -> &[Entry] {
-        self.get_time_range(
-            day.and_hms_opt(0, 0, 0).unwrap(),
-            day.and_hms_opt(23, 59, 59).unwrap(),
-        )
-    }
-
-    pub fn get_today(&self) -> &[Entry] {
-        self.get_day(&Local::now().date_naive())
+    // get entries for n most recent days including given day
+    pub fn get_n_days(&self, day: &NaiveDate, n: u32) -> &[Entry] {
+        let eod = day.and_hms_opt(23, 59, 59).unwrap();
+        self.get_time_range(eod - Duration::days(n as i64), eod)
     }
 
     pub fn get_today_as_string(&self) -> String {
         Local::now().format("%A, %F (week %W)").to_string()
     }
 
-    pub fn get_week(&self, day: &NaiveDate) -> &[Entry] {
-        let week = day.iso_week().week();
-        let begin = NaiveDate::from_isoywd_opt(day.year(), week, Weekday::Mon)
+    // get entries for n most recent weeks including week of given day
+    pub fn get_n_weeks(&self, day: &NaiveDate, n: u32) -> &[Entry] {
+        let week_of_day = day.iso_week().week();
+        let eow = NaiveDate::from_isoywd_opt(day.year(), week_of_day + 1, Weekday::Mon)
             .unwrap()
             .and_hms_opt(0, 0, 0)
             .unwrap();
-        let end = NaiveDate::from_isoywd_opt(day.year(), week + 1, Weekday::Mon)
-            .unwrap()
-            .and_hms_opt(0, 0, 0)
-            .unwrap();
-        self.get_time_range(begin, end)
-    }
-
-    pub fn get_this_week(&self) -> &[Entry] {
-        self.get_week(&Local::now().date_naive())
+        self.get_time_range(eow - Duration::weeks(n as i64), eow)
     }
 
     pub fn get_this_week_as_string(&self) -> String {
@@ -394,53 +382,73 @@ mod tests {
     }
 
     #[test]
-    fn test_get_day() {
+    fn test_get_n_days() {
         let tl = Timelog::new_from_string("");
         assert_eq!(
-            tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap()),
+            tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap(), 1),
             &[]
         );
 
         let tl = Timelog::new_from_string(TWO_DAYS);
         assert_eq!(
-            tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap()),
+            tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap(), 1),
             &[]
         );
 
-        let entries = tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 9).unwrap());
+        let entries = tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 9).unwrap(), 1);
         assert_eq!(entries.len(), 4);
         assert_eq!(&format!("{}", entries[0]), "2022-06-09 06:02: arrived");
         assert_eq!(&format!("{}", entries[3]), "2022-06-09 12:00: work");
 
-        let entries = tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap());
+        // no earlier entries, same entries as above
+        let entries2 = tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 9).unwrap(), 2);
+        assert_eq!(entries2, entries);
+
+        let entries = tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap(), 1);
         assert_eq!(entries.len(), 6);
         assert_eq!(&format!("{}", entries[0]), "2022-06-10 07:00: arrived");
         assert_eq!(
             &format!("{}", entries[5]),
             "2022-06-10 16:00: customer joe: support"
         );
+
+        // last two days includes 2022-06-09
+        let entries2 = tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap(), 2);
+        assert_eq!(entries2.len(), 10);
+        assert_eq!(entries2[4..], entries[..]);
+        assert_eq!(&format!("{}", entries2[1]), "2022-06-09 06:27: email");
     }
 
     #[test]
-    fn test_get_week() {
+    fn test_get_n_weeks() {
         let tl = Timelog::new_from_string("");
         assert_eq!(
-            tl.get_week(&NaiveDate::from_ymd_opt(2022, 6, 2).unwrap()),
+            tl.get_n_weeks(&NaiveDate::from_ymd_opt(2022, 6, 2).unwrap(), 1),
             &[]
         );
 
         let tl = Timelog::new_from_string(TWO_WEEKS);
         // select Wed, data has Tue and Thu
-        let entries = tl.get_week(&NaiveDate::from_ymd_opt(2022, 6, 2).unwrap());
-        assert_eq!(entries.len(), 6);
-        assert_eq!(&format!("{}", entries[0]), "2022-06-01 06:00: arrived");
-        assert_eq!(&format!("{}", entries[5]), "2022-06-03 07:10: ** tea");
+        let entries_w1_1 = tl.get_n_weeks(&NaiveDate::from_ymd_opt(2022, 6, 2).unwrap(), 1);
+        assert_eq!(entries_w1_1.len(), 6);
+        assert_eq!(&format!("{}", entries_w1_1[0]), "2022-06-01 06:00: arrived");
+        assert_eq!(&format!("{}", entries_w1_1[5]), "2022-06-03 07:10: ** tea");
+
+        // previous week has no entries
+        let entries_w1_2 = tl.get_n_weeks(&NaiveDate::from_ymd_opt(2022, 6, 2).unwrap(), 2);
+        assert_eq!(entries_w1_2, entries_w1_1);
 
         // select Tue, data has Wed to Fri
-        let entries = tl.get_week(&NaiveDate::from_ymd_opt(2022, 6, 7).unwrap());
-        assert_eq!(entries.len(), 7);
-        assert_eq!(&format!("{}", entries[0]), "2022-06-08 06:00: arrived");
-        assert_eq!(&format!("{}", entries[6]), "2022-06-10 07:00: workw2");
+        let entries_w2_1 = tl.get_n_weeks(&NaiveDate::from_ymd_opt(2022, 6, 7).unwrap(), 1);
+        assert_eq!(entries_w2_1.len(), 7);
+        assert_eq!(&format!("{}", entries_w2_1[0]), "2022-06-08 06:00: arrived");
+        assert_eq!(&format!("{}", entries_w2_1[6]), "2022-06-10 07:00: workw2");
+
+        // previous week has entries
+        let entries_w2_2 = tl.get_n_weeks(&NaiveDate::from_ymd_opt(2022, 6, 7).unwrap(), 2);
+        assert_eq!(entries_w2_2.len(), 13);
+        assert_eq!(entries_w2_2[0..6], entries_w1_1[..]);
+        assert_eq!(entries_w2_2[6..], entries_w2_1[..]);
     }
 
     #[test]
@@ -453,13 +461,13 @@ mod tests {
     #[test]
     fn test_get_history() {
         let tl = Timelog::new_from_string("");
-        assert!(
-            Timelog::get_history(tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap()))
-                .is_empty()
-        );
+        assert!(Timelog::get_history(
+            tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 8).unwrap(), 1)
+        )
+        .is_empty());
 
         let tl = Timelog::new_from_string(TWO_DAYS);
-        let entries = tl.get_day(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap());
+        let entries = tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap(), 1);
         assert_eq!(
             Timelog::get_history(entries),
             // no duplicate "rtimelog: code"
