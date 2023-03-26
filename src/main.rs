@@ -46,12 +46,14 @@ fn get_input(rl: &mut Editor<()>) -> Result<String, ReadlineError> {
 fn show_help() {
     println!(
         "
-:w - switch to weekly mode
-:d - switch to daily mode
-:q - quit
-:h - show this help
-:e - open timelog.txt in $EDITOR
-^r - history search (like in bash) through currently shown activities
+:w      - switch to weekly mode
+:w<num> - last <num> weeks
+:d      - switch to daily mode
+:d<num> - last <num> days
+:q      - quit
+:h      - show this help
+:e      - open timelog.txt in $EDITOR
+^r      - history search (like in bash) through currently shown activities
 
 Any other input is the description of a task that you just finished."
     );
@@ -61,13 +63,21 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
     clear_screen();
     let today = Local::now().date_naive();
     let entries = match mode {
-        TimeMode::Day => {
-            println!("Work done today {}:", timelog.get_today_as_string());
-            timelog.get_n_days(&today, 1)
+        TimeMode::Day(n) => {
+            if *n == 1 {
+                println!("Work done today {}:", timelog.get_today_as_string());
+            } else {
+                println!("Work done in the last {n} days:");
+            }
+            timelog.get_n_days(&today, *n)
         }
-        TimeMode::Week => {
-            println!("Work done this week {}:", timelog.get_this_week_as_string());
-            timelog.get_n_weeks(&today, 1)
+        TimeMode::Week(n) => {
+            if *n == 1 {
+                println!("Work done this week {}:", timelog.get_this_week_as_string());
+            } else {
+                println!("Work done in the last {n} weeks:");
+            }
+            timelog.get_n_weeks(&today, *n)
         }
     };
 
@@ -109,7 +119,7 @@ fn run_editor(fname: &PathBuf) {
 fn main() -> Result<(), Box<dyn Error>> {
     let mut timelog = Timelog::new_from_default_file();
     let mut running = true;
-    let mut time_mode = TimeMode::Day;
+    let mut time_mode = TimeMode::Day(1);
     let mut readline = Editor::<()>::new()?;
     let mut do_show = true;
 

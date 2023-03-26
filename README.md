@@ -20,18 +20,6 @@ Total slacking: 3 h 44 min
 
 
 0h 23 min since last entry; command (:h for help) or entry
-> :h
-
-:w - switch to weekly mode
-:d - switch to daily mode
-:q - quit
-:h - show this help
-:e - open timelog.txt in $EDITOR
-^r - history search (like in bash) through currently shown activities
-
-Any other input is the description of a task that you just finished.
-
-0h 24 min since last entry; command (:h for help) or entry
 >
 ```
 
@@ -51,7 +39,9 @@ have a single "unnamed" `**` slack activity, depending on whether you care
 about tracking individual slack activities.
 
 You can switch between per-day and per-week mode with `:d` and `:w`
-respectively.
+respectively. You can also append an additional number to show activities in
+the last n days/weeks -- for example, if you compile your weekly report on a
+Wednesday, use `:d7` to show activities since Thursday last week.
 
 Type `:q` to end the program.
 

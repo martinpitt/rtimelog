@@ -15,8 +15,8 @@
 
 #[derive(PartialEq, Debug)]
 pub enum TimeMode {
-    Day,
-    Week,
+    Day(u32),
+    Week(u32),
 }
 
 #[derive(PartialEq, Debug)]
@@ -32,20 +32,34 @@ pub enum Command {
 
 impl Command {
     pub fn parse(input: String) -> Command {
-        match input.as_str() {
-            "" => Command::Nothing,
-            ":q" => Command::Quit,
-            ":h" => Command::Help,
-            ":e" => Command::Edit,
-            ":w" => Command::SwitchMode(TimeMode::Week),
-            ":d" => Command::SwitchMode(TimeMode::Day),
-            _ => {
-                if input.starts_with(':') {
-                    Command::Error(format!("Unknown command: {}", input))
-                } else {
-                    Command::Add(input)
+        match input.chars().next() {
+            None => Command::Nothing,
+
+            Some(':') => match input.as_str() {
+                ":q" => Command::Quit,
+                ":h" => Command::Help,
+                ":e" => Command::Edit,
+                ":w" => Command::SwitchMode(TimeMode::Week(1)),
+                ":d" => Command::SwitchMode(TimeMode::Day(1)),
+
+                _ => {
+                    if let Some(arg) = input.strip_prefix(":d") {
+                        match arg.parse::<u32>() {
+                            Ok(n) => Command::SwitchMode(TimeMode::Day(n)),
+                            Err(_) => Command::Error("Invalid day number".to_string()),
+                        }
+                    } else if let Some(arg) = input.strip_prefix(":w") {
+                        match arg.parse::<u32>() {
+                            Ok(week) => Command::SwitchMode(TimeMode::Week(week)),
+                            Err(_) => Command::Error("Invalid week number".to_string()),
+                        }
+                    } else {
+                        Command::Error("Unknown command".to_string())
+                    }
                 }
-            }
+            },
+
+            Some(_) => Command::Add(input),
         }
     }
 }
@@ -62,11 +76,19 @@ mod tests {
         assert_eq!(Command::parse(":e".to_string()), Command::Edit);
         assert_eq!(
             Command::parse(":w".to_string()),
-            Command::SwitchMode(TimeMode::Week)
+            Command::SwitchMode(TimeMode::Week(1))
+        );
+        assert_eq!(
+            Command::parse(":w2".to_string()),
+            Command::SwitchMode(TimeMode::Week(2))
         );
         assert_eq!(
             Command::parse(":d".to_string()),
-            Command::SwitchMode(TimeMode::Day)
+            Command::SwitchMode(TimeMode::Day(1))
+        );
+        assert_eq!(
+            Command::parse(":d7".to_string()),
+            Command::SwitchMode(TimeMode::Day(7))
         );
         assert_eq!(
             Command::parse("foo".to_string()),
@@ -75,12 +97,21 @@ mod tests {
         // unknown command letter
         assert_eq!(
             Command::parse(":x".to_string()),
-            Command::Error("Unknown command: :x".to_string())
+            Command::Error("Unknown command".to_string())
         );
         // trailing garbage
         assert_eq!(
             Command::parse(":e2".to_string()),
-            Command::Error("Unknown command: :e2".to_string())
+            Command::Error("Unknown command".to_string())
+        );
+        // invalid day/week args
+        assert_eq!(
+            Command::parse(":da".to_string()),
+            Command::Error("Invalid day number".to_string())
+        );
+        assert_eq!(
+            Command::parse(":w ".to_string()),
+            Command::Error("Invalid week number".to_string())
         );
     }
 }
