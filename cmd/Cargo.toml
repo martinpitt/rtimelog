@@ -1,0 +1,15 @@
+[package]
+name = "rtimelog-cmd"
+description = "Command line time tracker compatible with gtimelog"
+license = "GPL-3.0-or-later"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "rtimelog-cmd"
+
+[dependencies]
+clap = { version = "4.5.23", features = ["derive"] }
+common = { version = "0.1.0", path = "../common" }
