@@ -23,7 +23,7 @@ use chrono::prelude::*;
 use rustyline::{error::ReadlineError, Editor};
 
 use rtimelog::commands::{Command, TimeMode};
-use rtimelog::store::Timelog;
+use common::store::Timelog;
 
 fn clear_screen() {
     print!("{esc}c", esc = 27 as char);
@@ -81,7 +81,7 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
         }
     };
 
-    let a = rtimelog::activity::Activities::new_from_entries(entries);
+    let a = common::activity::Activities::new_from_entries(entries);
     println!("{a}");
 
     rl_editor.clear_history();
