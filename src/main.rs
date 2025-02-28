@@ -48,8 +48,10 @@ fn show_help() {
         "
 :w      - switch to weekly mode
 :w<num> - last <num> weeks
-:d      - switch to daily mode
+:d      - switch to daily mode as report
 :d<num> - last <num> days
+:l      - switch to daily mode as journal
+:l<num> - last <num> days as journal
 :q      - quit
 :h      - show this help
 :e      - open timelog.txt in $EDITOR
@@ -71,6 +73,14 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut DefaultEditor) {
             }
             timelog.get_n_days(&today, *n)
         }
+        TimeMode::DayLog(n) => {
+            if *n == 1 {
+                println!("Work done today {}:", timelog.get_today_as_string());
+            } else {
+                println!("Work done in the last {n} days:");
+            }
+            timelog.get_n_days(&today, *n)
+        }
         TimeMode::Week(n) => {
             if *n == 1 {
                 println!("Work done this week {}:", timelog.get_this_week_as_string());
@@ -81,8 +91,16 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut DefaultEditor) {
         }
     };
 
-    let a = rtimelog::activity::Activities::new_from_entries(entries);
-    println!("{a}");
+    match mode {
+        TimeMode::Day(n) | TimeMode::Week(n) => {
+            let a = rtimelog::activity::Activities::new_from_entries(true, entries);
+            println!("{a}");
+        }
+        TimeMode::DayLog(n) => {
+            let a = rtimelog::activity::Activities::new_from_entries(false, entries);
+            println!("{a}");
+        }
+    }
 
     rl_editor.clear_history().unwrap();
     for a in Timelog::get_history(entries) {

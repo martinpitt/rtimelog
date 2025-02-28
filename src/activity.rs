@@ -51,7 +51,7 @@ pub struct Activities {
 }
 
 impl Activities {
-    pub fn new_from_entries(entries: &[Entry]) -> Activities {
+    pub fn new_from_entries(merge: bool, entries: &[Entry]) -> Activities {
         // don't use a hashmap here, we do want to keep this sorted by "first occurrence of task"
         let mut activities = Vec::new();
         let mut total_work = Duration::minutes(0);
@@ -75,16 +75,23 @@ impl Activities {
                         total_work = total_work + duration;
                     }
 
-                    // meh quadratic loop, but not important
-                    match activities
-                        .iter_mut()
-                        .find(|a: &&mut Activity| a.name == entry.task)
-                    {
-                        Some(a) => a.duration = a.duration + duration,
-                        None => activities.push(Activity {
+                    if merge {
+                        // meh quadratic loop, but not important
+                        match activities
+                            .iter_mut()
+                            .find(|a: &&mut Activity| a.name == entry.task)
+                        {
+                            Some(a) => a.duration = a.duration + duration,
+                            None => activities.push(Activity {
+                                name: entry.task.to_string(),
+                                duration,
+                            }),
+                        }
+                    } else {
+                        activities.push(Activity {
                             name: entry.task.to_string(),
                             duration,
-                        }),
+                        });
                     }
 
                     prev_stop = Some(entry.stop);
@@ -178,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_activities_empty() {
-        let a = Activities::new_from_entries(&[]);
+        let a = Activities::new_from_entries(true, &[]);
         assert_eq!(a.activities.len(), 0);
         assert_eq!(a.total_work, Duration::minutes(0));
         assert_eq!(a.total_slack, Duration::minutes(0));
@@ -202,6 +209,7 @@ mod tests {
         );
 
         let a = Activities::new_from_entries(
+            true,
             tl.get_n_days(&NaiveDate::from_ymd_opt(2022, 6, 10).unwrap(), 1),
         );
         assert_eq!(a.total_work, Duration::minutes(475));
@@ -255,6 +263,7 @@ Total slacking: 1 h 5 min\n"
         );
 
         let a = Activities::new_from_entries(
+            true,
             tl.get_n_weeks(&NaiveDate::from_ymd_opt(2022, 6, 7).unwrap(), 1),
         );
         assert_eq!(a.total_work, Duration::hours(3));

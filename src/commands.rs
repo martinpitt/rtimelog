@@ -16,6 +16,7 @@
 #[derive(PartialEq, Debug)]
 pub enum TimeMode {
     Day(u32),
+    DayLog(u32),
     Week(u32),
 }
 
@@ -41,11 +42,17 @@ impl Command {
                 ":e" => Command::Edit,
                 ":w" => Command::SwitchMode(TimeMode::Week(1)),
                 ":d" => Command::SwitchMode(TimeMode::Day(1)),
+                ":l" => Command::SwitchMode(TimeMode::DayLog(1)),
 
                 _ => {
                     if let Some(arg) = input.strip_prefix(":d") {
                         match arg.parse::<u32>() {
                             Ok(n) => Command::SwitchMode(TimeMode::Day(n)),
+                            Err(_) => Command::Error("Invalid day number".to_string()),
+                        }
+                    } else if let Some(arg) = input.strip_prefix(":l") {
+                        match arg.parse::<u32>() {
+                            Ok(n) => Command::SwitchMode(TimeMode::DayLog(n)),
                             Err(_) => Command::Error("Invalid day number".to_string()),
                         }
                     } else if let Some(arg) = input.strip_prefix(":w") {
@@ -89,6 +96,14 @@ mod tests {
         assert_eq!(
             Command::parse(":d7".to_string()),
             Command::SwitchMode(TimeMode::Day(7))
+        );
+        assert_eq!(
+            Command::parse(":l".to_string()),
+            Command::SwitchMode(TimeMode::DayLog(1))
+        );
+        assert_eq!(
+            Command::parse(":l7".to_string()),
+            Command::SwitchMode(TimeMode::DayLog(7))
         );
         assert_eq!(
             Command::parse("foo".to_string()),
