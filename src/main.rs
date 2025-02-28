@@ -20,7 +20,7 @@ use std::path::PathBuf;
 use std::process;
 
 use chrono::prelude::*;
-use rustyline::{error::ReadlineError, Editor};
+use rustyline::{error::ReadlineError, DefaultEditor};
 
 use rtimelog::commands::{Command, TimeMode};
 use rtimelog::store::Timelog;
@@ -29,7 +29,7 @@ fn clear_screen() {
     print!("{esc}c", esc = 27 as char);
 }
 
-fn get_input(rl: &mut Editor<()>) -> Result<String, ReadlineError> {
+fn get_input(rl: &mut DefaultEditor) -> Result<String, ReadlineError> {
     match rl.readline("> ") {
         Ok(mut line) => {
             line.truncate(line.trim_end().len());
@@ -59,7 +59,7 @@ Any other input is the description of a task that you just finished."
     );
 }
 
-fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
+fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut DefaultEditor) {
     clear_screen();
     let today = Local::now().date_naive();
     let entries = match mode {
@@ -84,9 +84,9 @@ fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<()>) {
     let a = rtimelog::activity::Activities::new_from_entries(entries);
     println!("{a}");
 
-    rl_editor.clear_history();
+    rl_editor.clear_history().unwrap();
     for a in Timelog::get_history(entries) {
-        rl_editor.add_history_entry(a);
+        rl_editor.add_history_entry(a).unwrap();
     }
 }
 
@@ -120,7 +120,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut timelog = Timelog::new_from_default_file();
     let mut running = true;
     let mut time_mode = TimeMode::Day(1);
-    let mut readline = Editor::<()>::new()?;
+    let mut readline = DefaultEditor::new()?;
     let mut do_show = true;
 
     while running {
