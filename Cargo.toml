@@ -12,8 +12,8 @@ name = "rtimelog"
 
 [dependencies]
 chrono = "0"
-dirs = "6"
-rustyline = "15"
+dirs = ">= 4, <= 6"
+rustyline = ">= 11, <= 15"
 
 [dev-dependencies]
 pretty_assertions = "1"
