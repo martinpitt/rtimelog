@@ -70,9 +70,9 @@ impl Activities {
 
                     let duration = entry.stop.signed_duration_since(prev_stop_time);
                     if entry.task.contains("**") {
-                        total_slack = total_slack + duration;
+                        total_slack += duration;
                     } else {
-                        total_work = total_work + duration;
+                        total_work += duration;
                     }
 
                     // meh quadratic loop, but not important
@@ -80,7 +80,7 @@ impl Activities {
                         .iter_mut()
                         .find(|a: &&mut Activity| a.name == entry.task)
                     {
-                        Some(a) => a.duration = a.duration + duration,
+                        Some(a) => a.duration += duration,
                         None => activities.push(Activity {
                             name: entry.task.to_string(),
                             duration,

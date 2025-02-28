@@ -29,7 +29,6 @@ use chrono::{prelude::*, Duration, Local, NaiveDate, NaiveDateTime, Weekday};
 /**
  * Single timelog entry
  */
-
 const TIME_FMT: &str = "%Y-%m-%d %H:%M";
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
