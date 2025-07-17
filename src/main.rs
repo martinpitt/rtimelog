@@ -160,7 +160,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 timelog.save()?;
             }
             Command::Error(e) => {
-                println!("Error: {}", e);
+                println!("Error: {e}");
                 do_show = false;
             }
         }
