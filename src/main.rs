@@ -109,8 +109,21 @@ fn show_prompt(timelog: &Timelog) -> Result<(), io::Error> {
     Ok(())
 }
 
+// return the default editor on linux
+#[cfg(target_os = "linux")]
+fn default_editor() -> &'static str {
+    "vi"
+}
+
+// return the default editor on windows
+#[cfg(target_os = "windows")]
+fn default_editor() -> &'static str {
+    "start"
+}
+
 fn run_editor(fname: &PathBuf) {
-    let editor = env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
+    let editor = env::var("EDITOR").unwrap_or_else(|_| default_editor().to_string());
+    println!("Running {}", &editor);
     if let Err(e) = process::Command::new(&editor).arg(fname).status() {
         println!("Failed to run {} on {:?}: {:?}", &editor, fname, e);
     }
