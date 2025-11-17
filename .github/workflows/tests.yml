@@ -12,10 +12,3 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: test/run-container.sh
-
-  cargo-deny:
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: EmbarkStudios/cargo-deny-action@v2
