@@ -13,7 +13,7 @@ name = "rtimelog"
 [dependencies]
 chrono = "0"
 dirs = ">= 4, <= 6"
-rustyline = ">= 11, <= 15"
+rustyline = { version = ">= 11, <= 15", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
 pretty_assertions = "1"

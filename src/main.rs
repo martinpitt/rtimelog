@@ -20,7 +20,10 @@ use std::path::PathBuf;
 use std::process;
 
 use chrono::prelude::*;
-use rustyline::{error::ReadlineError, DefaultEditor};
+use rtimelog::helper::TimelogHelper;
+use rustyline::history::{History, MemHistory};
+use rustyline::Helper;
+use rustyline::{error::ReadlineError, Editor};
 
 use rtimelog::commands::{Command, TimeMode};
 use rtimelog::store::Timelog;
@@ -29,7 +32,7 @@ fn clear_screen() {
     print!("{esc}c", esc = 27 as char);
 }
 
-fn get_input(rl: &mut DefaultEditor) -> Result<String, ReadlineError> {
+fn get_input<H: Helper, I: History>(rl: &mut Editor<H, I>) -> Result<String, ReadlineError> {
     match rl.readline("> ") {
         Ok(mut line) => {
             line.truncate(line.trim_end().len());
@@ -59,7 +62,7 @@ Any other input is the description of a task that you just finished."
     );
 }
 
-fn show(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut DefaultEditor) {
+fn show<H: Helper, I: History>(timelog: &Timelog, mode: &TimeMode, rl_editor: &mut Editor<H, I>) {
     clear_screen();
     let today = Local::now().date_naive();
     let entries = match mode {
@@ -133,8 +136,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut timelog = Timelog::new_from_default_file();
     let mut running = true;
     let mut time_mode = TimeMode::Day(1);
-    let mut readline = DefaultEditor::new()?;
+    let mut readline = Editor::<TimelogHelper, MemHistory>::new()?;
     let mut do_show = true;
+
+    let mut helper = TimelogHelper::from(&timelog);
+    readline.set_helper(Some(helper));
 
     while running {
         if do_show {
@@ -153,9 +159,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             Command::Edit => {
                 run_editor(&timelog.filename.unwrap());
                 timelog = Timelog::new_from_default_file();
+                helper = TimelogHelper::from(&timelog);
+                readline.set_helper(Some(helper));
             }
             Command::SwitchMode(m) => time_mode = m,
             Command::Add(a) => {
+                readline
+                    .helper_mut()
+                    .expect("Helper should be set")
+                    .add(a.clone());
                 timelog.add(a);
                 timelog.save()?;
             }

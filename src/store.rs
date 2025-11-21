@@ -176,9 +176,8 @@ impl Timelog {
         Ok(())
     }
 
-    #[cfg(test)]
     pub fn get_all(&self) -> impl Iterator<Item = &Entry> {
-        return self.entries.iter();
+        self.entries.iter()
     }
 
     pub fn get_time_range(&self, begin: NaiveDateTime, end: NaiveDateTime) -> &[Entry] {
